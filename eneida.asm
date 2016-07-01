@@ -213,6 +213,7 @@ section '.text' code readable executable
 include 'eneida_math.inc'
 include 'eneida_demo.inc'
 include 'eneida_scene1.inc'
+include 'eneida_lib.inc'
 ;=============================================================================
 falign
 check_cpu_extensions:
@@ -321,7 +322,7 @@ falign
 init_window:
 ;-----------------------------------------------------------------------------
   virtual at rsp
-  rq 12
+  rept 12 n { .param#n dq ? }
   .wc WNDCLASS
   dalign 8
   .rect RECT
@@ -366,15 +367,14 @@ init_window:
         $lea rdx, [k_win_class_name]
         $mov r8, rdx
         $mov r9d, WS_VISIBLE+k_win_style
-        $mov eax, CW_USEDEFAULT
-        $mov [rsp+32], eax
-        $mov [rsp+40], eax
-        $mov [rsp+48], r10d
-        $mov [rsp+56], r11d
-        $mov [rsp+64], ecx
-        $mov [rsp+72], ecx
-        $mov [rsp+80], rax, [.wc.hInstance]
-        $mov [rsp+88], ecx
+        $mov dword[.param5], CW_USEDEFAULT
+        $mov [.param6], CW_USEDEFAULT
+        $mov dword[.param7], r10d
+        $mov dword[.param8], r11d
+        $mov [.param9], 0
+        $mov [.param10], 0
+        $mov [.param11], rax, [.wc.hInstance]
+        $mov [.param12], 0
         $icall CreateWindowEx
         $mov [win_handle], rax
         $test rax, rax
@@ -451,7 +451,7 @@ start:
         $and rsp, -32
         $sub rsp, .k_stack_size
   virtual at rsp
-  rq 5
+  rept 5 n { .param#n dq ? }
   .msg MSG
   dalign 32
   .k_stack_size = $-$$
@@ -464,7 +464,7 @@ start:
         $xor edx, edx
         $xor r8d, r8d
         $xor r9d, r9d
-        $mov dword[rsp+32], PM_REMOVE
+        $mov dword[.param5], PM_REMOVE
         $icall PeekMessage
         $test eax, eax
         $jz .update

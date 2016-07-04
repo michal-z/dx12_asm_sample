@@ -21,7 +21,7 @@ scene1_init:
   end virtual
         $zeroStack .k_stack_size
 
-        $mov [.upload_heap_props.Type], D3D12_HEAP_TYPE_UPLOAD
+        $mov [.upload_heap_props.Type], D3D12_HEAP_TYPE_DEFAULT
         $mov [.buffer_res_desc.Dimension], D3D12_RESOURCE_DIMENSION_BUFFER
         $mov [.buffer_res_desc.Width], 1024
         $mov [.buffer_res_desc.Height], 1

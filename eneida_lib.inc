@@ -64,30 +64,27 @@ load_file:
         $pop rbx rsi rdi
         $ret
 ;=============================================================================
-; in: rcx - buffer size
-; out: rax - buffer resource, rdx - cpu buffer address
+; in: rcx - buffer size, edx - D3D12_HEAP_TYPE_*, r8d - D3D12_RESOURCE_STATE_*
+; out: rax - buffer resource
 falign
-create_upload_buffer:
+create_buffer:
 ;-----------------------------------------------------------------------------
         $sub rsp, .k_stack_size
   virtual at rsp
   rept 8 n { .param#n dq ? }
   .buffer dq ?
-  .addr dq ?
   dalign 8
   .upload_heap_props D3D12_HEAP_PROPERTIES
   dalign 8
   .buffer_res_desc D3D12_RESOURCE_DESC
-  dalign 8
-  .empty_range D3D12_RANGE
   dalign 32
   .k_stack_size = $-$$+24
   end virtual
         $zeroStack .k_stack_size
 
-        $mov [.upload_heap_props.Type], D3D12_HEAP_TYPE_UPLOAD
+        $mov [.upload_heap_props.Type], edx             ; D3D12_HEAP_TYPE_*
         $mov [.buffer_res_desc.Dimension], D3D12_RESOURCE_DIMENSION_BUFFER
-        $mov [.buffer_res_desc.Width], rcx
+        $mov [.buffer_res_desc.Width], rcx              ; buffer size
         $mov [.buffer_res_desc.Height], 1
         $mov [.buffer_res_desc.DepthOrArraySize], 1
         $mov [.buffer_res_desc.MipLevels], 1
@@ -95,16 +92,47 @@ create_upload_buffer:
         $mov [.buffer_res_desc.Layout], D3D12_TEXTURE_LAYOUT_ROW_MAJOR
 
         ; create buffer
+        $mov dword[.param5], r8d                        ; D3D12_RESOURCE_STATE_*
         $mov rcx, [glob.device]
         $lea rdx, [.upload_heap_props]
         $mov r8d, D3D12_HEAP_FLAG_NONE
         $lea r9, [.buffer_res_desc]
-        $mov [.param5], D3D12_RESOURCE_STATE_GENERIC_READ
         $mov [.param6], 0
         $lea [.param7], rax, [IID_ID3D12Resource]
         $lea [.param8], rax, [.buffer]
         $comcall ID3D12Device.CreateCommittedResource
         $checkhr eax, .error
+
+        $mov rax, [.buffer]
+        $jmp .return
+  .error:
+        $xor eax, eax
+  .return:
+        $add rsp, .k_stack_size
+        $ret
+;=============================================================================
+; in: rcx - buffer size
+; out: rax - buffer resource, rdx - cpu buffer address
+falign
+create_upload_buffer:
+;-----------------------------------------------------------------------------
+        $sub rsp, .k_stack_size
+  virtual at rsp
+  rept 4 n { .param#n dq ? }
+  .buffer dq ?
+  .addr dq ?
+  .empty_range D3D12_RANGE
+  dalign 32
+  .k_stack_size = $-$$+24
+  end virtual
+        $zeroStack .k_stack_size
+
+        $mov edx, D3D12_HEAP_TYPE_UPLOAD
+        $mov r8d, D3D12_RESOURCE_STATE_GENERIC_READ
+        $call create_buffer
+        $mov [.buffer], rax
+        $test rax, rax
+        $jz .error
 
         ; map buffer
         $mov rcx, [.buffer]
@@ -118,6 +146,7 @@ create_upload_buffer:
         $mov rdx, [.addr]
         $jmp .return
   .error:
+        $safeRelease [.buffer]
         $xor eax, eax
         $xor edx, edx
   .return:

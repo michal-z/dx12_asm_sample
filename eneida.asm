@@ -368,6 +368,8 @@ wait_for_gpu:
         $mov edx, INFINITE
         $icall WaitForSingleObject
 
+        $add [glob.cpu_completed_fences], 1
+
         $add rsp, .k_stack_size
         $ret
 ;=============================================================================

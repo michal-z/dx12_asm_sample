@@ -6,7 +6,6 @@ scene1_init:
         $sub rsp, .k_stack_size
   virtual at rsp
   rept 8 n { .param#n dq ? }
-  .ptr dq ?
   dalign 8
   .pso_desc D3D12_GRAPHICS_PIPELINE_STATE_DESC
   dalign 8
@@ -38,25 +37,10 @@ scene1_init:
   end virtual
 
   .frame_resources_loop:
-        ; create constant buffer
-        $mov rcx, [glob.device]
-        $lea rdx, [.upload_heap_props]
-        $mov r8d, D3D12_HEAP_FLAG_NONE
-        $lea r9, [.buffer_res_desc]
-        $mov [.param5], D3D12_RESOURCE_STATE_GENERIC_READ
-        $mov [.param6], 0
-        $lea [.param7], rax, [IID_ID3D12Resource]
-        $lea [.param8], rax, [.frame_res.constant_buffer]
-        $comcall ID3D12Device.CreateCommittedResource
-        $checkhr eax, .error
-
-        ; map constant buffer
-        $mov rcx, [.frame_res.constant_buffer]
-        $xor edx, edx
-        $lea r8, [.empty_range]
-        $lea r9, [.frame_res.constant_buffer_addr]
-        $comcall ID3D12Resource.Map
-        $checkhr eax, .error
+        $mov ecx, 1024
+        $call create_upload_buffer
+        $mov [.frame_res.constant_buffer], rax
+        $mov [.frame_res.constant_buffer_addr], rdx
 
         ; create constant buffer view
         $mov rcx, [.frame_res.constant_buffer]
@@ -70,40 +54,17 @@ scene1_init:
 
 
         ; create vertex buffer
-        $mov rcx, [glob.device]
-        $lea rdx, [.upload_heap_props]
-        $mov r8d, D3D12_HEAP_FLAG_NONE
-        $lea r9, [.buffer_res_desc]
-        $mov [.param5], D3D12_RESOURCE_STATE_GENERIC_READ
-        $mov [.param6], 0
-        $lea [.param7], rax, [IID_ID3D12Resource]
-        $lea [.param8], rax, [glob.mesh_vb]
-        $comcall ID3D12Device.CreateCommittedResource
-        $checkhr eax, .error
-
-        ; map vertex buffer
-        $mov rcx, [glob.mesh_vb]
-        $mov edx, 0
-        $lea r8, [.empty_range]
-        $lea r9, [.ptr]
-        $comcall ID3D12Resource.Map
-        $checkhr eax, .error
+        $mov ecx, 1024
+        $call create_upload_buffer
+        $mov [glob.mesh_vb], rax
 
         ; fill vertex buffer
-        $mov rcx, [.ptr]
         $vmovaps xmm0, [glob.tri_v0]
-        $vmovaps [rcx], xmm0
+        $vmovaps [rdx], xmm0
         $vmovaps xmm0, [glob.tri_v1]
-        $vmovaps [rcx+16], xmm0
+        $vmovaps [rdx+16], xmm0
         $vmovaps xmm0, [glob.tri_v2]
-        $vmovaps [rcx+32], xmm0
-
-        ; unmap vertex buffer
-        $mov rcx, [glob.mesh_vb]
-        $mov edx, 0
-        $lea r8, [.empty_range]
-        $comcall ID3D12Resource.Unmap
-        $checkhr eax, .error
+        $vmovaps [rdx+32], xmm0
 
         ; create vertex buffer view
         $mov rcx, [glob.mesh_vb]

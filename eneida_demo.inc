@@ -56,6 +56,7 @@ demo_init:
   virtual at rbx
   .fres frame_resources
   end virtual
+
         $xor esi, esi
   @@:   $mov rcx, [glob.device]
         $mov edx, D3D12_COMMAND_LIST_TYPE_DIRECT
@@ -157,7 +158,7 @@ demo_init:
 
         ; frame fence
         $mov rcx, [glob.device]
-        $mov edx, 1
+        $mov edx, 0
         $mov r8d, D3D12_FENCE_FLAG_NONE
         $lea r9, [IID_ID3D12Fence]
         $lea [.param5], rax, [glob.frame_fence]
@@ -201,22 +202,7 @@ demo_init:
         $lea r8, [glob.cmdlist]
         $comcall ID3D12CommandQueue.ExecuteCommandLists
 
-        ; wait for the GPU
-        $mov rcx, [glob.cmdqueue]
-        $mov rdx, [glob.frame_fence]
-        $xor r8d, r8d
-        $comcall ID3D12CommandQueue.Signal
-        $checkhr eax, .error
-
-        $mov rcx, [glob.frame_fence]
-        $xor edx, edx
-        $mov r8, [glob.frame_fence_event]
-        $comcall ID3D12Fence.SetEventOnCompletion
-        $checkhr eax, .error
-
-        $mov rcx, [glob.frame_fence_event]
-        $mov edx, INFINITE
-        $icall WaitForSingleObject
+        $call wait_for_gpu
 
         $mov eax, 1
         $jmp .return
@@ -258,6 +244,7 @@ demo_update:
         $comcall IDXGISwapChain3.Present
 
         $add [glob.cpu_completed_fences], 1
+
         $mov rcx, [glob.cmdqueue]
         $mov rdx, [glob.frame_fence]
         $mov r8, [glob.cpu_completed_fences]
@@ -277,6 +264,7 @@ demo_update:
         $add rdx, 1
         $mov r8, [glob.frame_fence_event]
         $comcall ID3D12Fence.SetEventOnCompletion
+
         $mov rcx, [glob.frame_fence_event]
         $mov edx, INFINITE
         $icall WaitForSingleObject
@@ -287,7 +275,8 @@ demo_update:
         $mov [glob.back_buffer_index], eax
 
         $xor edx, edx
-        $mov rax, [glob.cpu_completed_fences]
+        $mov eax, [glob.frame_index]
+        $add eax, 1
         $mov ecx, k_frame_count
         $div rcx
         $mov [glob.frame_index], edx

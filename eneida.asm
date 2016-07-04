@@ -93,15 +93,15 @@ macro emit [inst] {
   forward
         inst }
 
-macro iaca_begin {
+macro $iacaBegin {
         $mov ebx, 111
         db 0x64, 0x67, 0x90 }
 
-macro iaca_end {
+macro $iacaEnd {
         $mov ebx, 222
         db 0x64, 0x67, 0x90 }
 
-macro debugbreak {
+macro $debugBreak {
         $int3
         $nop }
 
@@ -177,11 +177,10 @@ macro $lea op1*, op2*, op3 {
 macro $zeroStack size* {
         $vpxor ymm0, ymm0, ymm0
         $xor eax, eax
-        $mov ecx, size/32
   @@:   $vmovdqa [rsp+rax], ymm0
         $add eax, 32
-        $sub ecx, 1
-        $jnz @b }
+        $cmp eax, 32*(size/32)
+        $jne @b }
 
 macro $checkhr res*, err* {
         $test res, res
@@ -352,23 +351,21 @@ wait_for_gpu:
   .k_stack_size = 32*1+24
         $sub rsp, .k_stack_size
 
+        $add [glob.cpu_completed_fences], 1
+
         $mov rcx, [glob.cmdqueue]
         $mov rdx, [glob.frame_fence]
         $mov r8, [glob.cpu_completed_fences]
-        $add r8, 1
         $comcall ID3D12CommandQueue.Signal
 
         $mov rcx, [glob.frame_fence]
         $mov rdx, [glob.cpu_completed_fences]
-        $add rdx, 1
         $mov r8, [glob.frame_fence_event]
         $comcall ID3D12Fence.SetEventOnCompletion
 
         $mov rcx, [glob.frame_fence_event]
         $mov edx, INFINITE
         $icall WaitForSingleObject
-
-        $add [glob.cpu_completed_fences], 1
 
         $add rsp, .k_stack_size
         $ret

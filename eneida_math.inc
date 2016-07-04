@@ -247,11 +247,11 @@ falign
 matrix_look_at:
 ;-----------------------------------------------------------------------------
         $vsubps xmm1, xmm1, xmm0                        ; eye direction
-        $vec3FastNormalize xmm1                       ; xmm1 = zaxis
+        $vec3FastNormalize xmm1                         ; xmm1 = zaxis
         $vec3Cross xmm2, xmm1
-        $vec3FastNormalize xmm2                       ; xmm2 = xaxis
+        $vec3FastNormalize xmm2                         ; xmm2 = xaxis
         $vmovaps xmm3, xmm1
-        $vec3Cross xmm3, xmm2                          ; xmm3 = yaxis
+        $vec3Cross xmm3, xmm2                           ; xmm3 = yaxis
         $vxorps xmm0, xmm0, [k_i32_negative_zero]       ; xmm0 = neg(eye position)
         $vmovaps xmm5, xmm2
         $vmovaps xmm6, xmm3

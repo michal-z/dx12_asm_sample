@@ -119,7 +119,7 @@ macro $icall target* {
         $call [target] }
 
 macro $malloc size* {
-        $mov rcx, [process_heap]
+        $mov rcx, [glob.process_heap]
         $xor edx, edx
         $mov r8d, size
         $icall HeapAlloc }
@@ -129,7 +129,7 @@ macro $free ptr* {
         $mov r8, ptr
         $test r8, r8
         $jz .end
-        $mov rcx, [process_heap]
+        $mov rcx, [glob.process_heap]
         $xor edx, edx
         $icall HeapFree
   .end: }
@@ -195,18 +195,149 @@ macro $vshufps d*, s0*, s1*, fp3*, fp2, fp1, fp0 {
   end if }
 
 
-struc frame_resources {
-  .constant_buffer dq 0
-  .constant_buffer_ptr dq 0
-  .constant_buffer_gpu_ptr dq 0
-  .vertex_buffer dq 0
-  .vertex_buffer_ptr dq 0
-  .vertex_buffer_view D3D12_VERTEX_BUFFER_VIEW }
-struc_offsets_size frame_resources
-
 k_frame_count equ 3
 k_win_style equ WS_OVERLAPPED+WS_SYSMENU+WS_CAPTION+WS_MINIMIZEBOX
 k_swapchain_buffer_count equ 4
+;========================================================================
+section '.data' data readable writeable
+
+struc frame_resources {
+  .constant_buffer dq 0
+  .constant_buffer_addr dq 0
+  .constant_buffer_view dq 0
+  .cmdalloc dq ? }
+struc_offsets_size frame_resources
+
+align 8
+glob:
+  .mesh_vb dq 0
+  .mesh_ib dq 0
+
+  align 8
+  .mesh_vb_view D3D12_VERTEX_BUFFER_VIEW
+
+  align 8
+  .mesh_ib_view D3D12_INDEX_BUFFER_VIEW
+
+  align 8
+  .factory_dxgi dq 0
+  .device dq 0
+  .cmdqueue dq 0
+  .cmdlist dq 0
+
+  .swapchain dq 0
+  .swapchain_heap dq 0
+  .swapchain_heap_start dq 0
+  .swapchain_buffers dq k_swapchain_buffer_count dup 0
+
+  .frame_fence dq 0
+  .frame_fence_event dq 0
+  .cpu_completed_fences dq 0
+
+  align 8
+  .viewport D3D12_VIEWPORT
+
+  align 8
+  .scissor D3D12_RECT
+
+  align 4
+  .rtv_size dd 0
+  .cbv_srv_uav_size dd 0
+  .back_buffer_index dd 0
+  .frame_index dd 0
+  .clear_color dd 0.0, 0.2, 0.4, 1.0
+
+  align 8
+  .pso dq 0
+  .rootsig dq 0
+
+  align 8
+  .frame_res: rb (k_frame_count * sizeof.frame_resources)
+
+  align 4
+  .eye_half_fovy dd 0.52359876 ; pi / 6
+  .eye_nearz dd 1.0
+  .eye_farz dd 100.0
+
+  align 16
+  .eye_position: dd 1.7, 1.7, -1.7, 1.0
+  .eye_focus: dd 0.0, 0.0, 0.0, 1.0
+  .eye_up: dd 0.0, 1.0, 0.0, 0.0
+
+  .tri_v0: dd -0.7, -0.7, 0.0, 1.0
+  .tri_v1: dd 0.0, 0.7, 0.0, 1.0
+  .tri_v2: dd 0.7, -0.7, 0.0, 1.0
+
+  align 1
+  .sz_position db 'POSITION', 0
+  .sz_vs_object db 'data/shader/object_vs.cso', 0
+  .sz_ps_object db 'data/shader/object_ps.cso', 0
+
+  align 8
+  .win_handle dq 0
+  .win_width dd 1280
+  .win_height dd 720
+
+  align 8
+  .process_heap dq 0
+  .time dq 0
+  .time_delta dd 0,0
+
+
+align 8
+get_time.perf_counter dq 0
+get_time.perf_freq dq 0
+get_time.first_perf_counter dq 0
+
+update_frame_stats.prev_time dq 0
+update_frame_stats.prev_update_time dq 0
+update_frame_stats.frame dd 0,0
+
+align 8
+k_f64_1000000_0 dq 1000000.0
+k_f64_1_0 dq 1.0
+
+align 1
+k_win_class_name db 'eneida',0
+k_win_text_fmt db '[%d fps  %d us] eneida',0
+
+IID_IDXGISwapChain3 GUID 0x94d99bdb,0xf1f8,0x4ab0,0xb2,0x36,0x7d,0xa0,0x17,0x0e,0xda,0xb1
+IID_IDXGIFactory4 GUID 0x1bc6ea02,0xef36,0x464f,0xbf,0x0c,0x21,0xca,0x39,0xe5,0x16,0x8a
+IID_ID3D12Device GUID 0x189819f1,0x1db6,0x4b57,0xbe,0x54,0x18,0x21,0x33,0x9b,0x85,0xf7
+IID_ID3D12Debug GUID 0x344488b7,0x6846,0x474b,0xb9,0x89,0xf0,0x27,0x44,0x82,0x45,0xe0
+IID_ID3D12CommandQueue GUID 0x0ec870a6,0x5d7e,0x4c22,0x8c,0xfc,0x5b,0xaa,0xe0,0x76,0x16,0xed
+IID_ID3D12CommandAllocator GUID 0x6102dee4,0xaf59,0x4b09,0xb9,0x99,0xb4,0x4d,0x73,0xf0,0x9b,0x24
+IID_ID3D12CommandList GUID 0x7116d91c,0xe7e4,0x47ce,0xb8,0xc6,0xec,0x81,0x68,0xf4,0x37,0xe5
+IID_ID3D12GraphicsCommandList GUID 0x5b160d0f,0xac1b,0x4185,0x8b,0xa8,0xb3,0xae,0x42,0xa5,0xa4,0x55
+IID_ID3D12DescriptorHeap GUID 0x8efb471d,0x616c,0x4f49,0x90,0xf7,0x12,0x7b,0xb7,0x63,0xfa,0x51
+IID_ID3D12Resource GUID 0x696442be,0xa72e,0x4059,0xbc,0x79,0x5b,0x5c,0x98,0x04,0x0f,0xad
+IID_ID3D12Fence GUID 0x0a753dcf,0xc4d8,0x4b91,0xad,0xf6,0xbe,0x5a,0x60,0xd9,0x5a,0x76
+IID_ID3D12RootSignature GUID 0xc54a6b66,0x72df,0x4ee8,0x8b,0xe5,0xa9,0x46,0xa1,0x42,0x92,0x14
+IID_ID3D12PipelineState GUID 0x765a30f3,0xf624,0x4c6f,0xa8,0x28,0xac,0xe9,0x48,0x62,0x24,0x45
+
+; math constants
+align 64
+k_f32_identity_r0: dd 1.0,0.0,0.0,0.0
+k_f32_identity_r1: dd 0.0,1.0,0.0,0.0
+k_f32_identity_r2: dd 0.0,0.0,1.0,0.0
+k_f32_identity_r3: dd 0.0,0.0,0.0,1.0
+k_f32_pi: dd 8 dup 3.141592654
+k_f32_two_pi: dd 8 dup 6.283185307
+k_f32_reciprocal_two_pi: dd 8 dup 0.159154943
+k_f32_half_pi: dd 8 dup 1.570796327
+k_f32_half: dd 8 dup 0.5
+k_f32_sin_coefficients: dd -0.16666667,0.0083333310,-0.00019840874,2.7525562e-06,-2.3889859e-08,-0.16665852,0.0083139502,-0.00018524670
+k_f32_cos_coefficients: dd -0.5,0.041666638,-0.0013888378,2.4760495e-05,-2.6051615e-07,-0.49992746,0.041493919,-0.0012712436
+k_f32_one: dd 8 dup 1.0
+k_f32_negative_one: dd 8 dup -1.0
+k_i32_negative_zero: dd 8 dup 0x80000000
+k_i32_negative_zero_x0: dd 0x80000000,0,0,0,0,0,0,0
+k_i32_negative_zero_y0: dd 0,0x80000000,0,0,0,0,0,0
+k_i32_negative_zero_z0: dd 0,0,0x80000000,0,0,0,0,0
+k_i32_perm_x0_y1: dd 0,0,0,0,5,5,5,5
+k_i32_perm_z0_w1: dd 2,2,2,2,7,7,7,7
+k_i32_perm_y0_x1: dd 1,1,1,1,4,4,4,4
+k_i32_perm_w0_z1: dd 3,3,3,3,6,6,6,6
 ;=============================================================================
 section '.text' code readable executable
 
@@ -214,6 +345,31 @@ include 'eneida_math.inc'
 include 'eneida_demo.inc'
 include 'eneida_scene1.inc'
 include 'eneida_lib.inc'
+;=============================================================================
+falign
+wait_for_gpu:
+;-----------------------------------------------------------------------------
+  .k_stack_size = 32*1+24
+        $sub rsp, .k_stack_size
+
+        $mov rcx, [glob.cmdqueue]
+        $mov rdx, [glob.frame_fence]
+        $mov r8, [glob.cpu_completed_fences]
+        $add r8, 1
+        $comcall ID3D12CommandQueue.Signal
+
+        $mov rcx, [glob.frame_fence]
+        $mov rdx, [glob.cpu_completed_fences]
+        $add rdx, 1
+        $mov r8, [glob.frame_fence_event]
+        $comcall ID3D12Fence.SetEventOnCompletion
+
+        $mov rcx, [glob.frame_fence_event]
+        $mov edx, INFINITE
+        $icall WaitForSingleObject
+
+        $add rsp, .k_stack_size
+        $ret
 ;=============================================================================
 falign
 check_cpu_extensions:
@@ -285,12 +441,12 @@ update_frame_stats:
         $vmovsd [.prev_update_time], xmm0
 
   @@:   $call get_time                          ; xmm0 = (0,time)
-        $vmovsd [time], xmm0
+        $vmovsd [glob.time], xmm0
         $vsubsd xmm1, xmm0, [.prev_time]        ; xmm1 = (0,time_delta)
         $vmovsd [.prev_time], xmm0
         $vxorps xmm2, xmm2, xmm2
         $vcvtsd2ss xmm1, xmm2, xmm1             ; xmm1 = (0,0,0,time_delta)
-        $vmovss [time_delta], xmm1
+        $vmovss [glob.time_delta], xmm1
         $vmovsd xmm1, [.prev_update_time]       ; xmm1 = (0,prev_update_time)
         $vsubsd xmm2, xmm0, xmm1                ; xmm2 = (0,time-prev_update_time)
         $vcomisd xmm2, [k_f64_1_0]
@@ -310,7 +466,7 @@ update_frame_stats:
         $vcvtsd2si r8, xmm0
         $vcvtsd2si r9, xmm1
         $icall wsprintf
-        $mov rcx, [win_handle]
+        $mov rcx, [glob.win_handle]
         $lea rdx, [.text]
         $icall SetWindowText
 
@@ -351,8 +507,8 @@ init_window:
         $jz .error
 
         ; compute window size
-        $mov [.rect.right], eax, [win_width]
-        $mov [.rect.bottom], eax, [win_height]
+        $mov [.rect.right], eax, [glob.win_width]
+        $mov [.rect.bottom], eax, [glob.win_height]
         $lea rcx, [.rect]
         $mov edx, k_win_style
         $xor r8d, r8d
@@ -368,7 +524,7 @@ init_window:
         $mov r8, rdx
         $mov r9d, WS_VISIBLE+k_win_style
         $mov dword[.param5], CW_USEDEFAULT
-        $mov [.param6], CW_USEDEFAULT
+        $mov dword[.param6], CW_USEDEFAULT
         $mov dword[.param7], r10d
         $mov dword[.param8], r11d
         $mov [.param9], 0
@@ -376,7 +532,7 @@ init_window:
         $mov [.param11], rax, [.wc.hInstance]
         $mov [.param12], 0
         $icall CreateWindowEx
-        $mov [win_handle], rax
+        $mov [glob.win_handle], rax
         $test rax, rax
         $jz .error
 
@@ -403,7 +559,7 @@ init:
 
         ; get process heap
         $icall GetProcessHeap
-        $mov [process_heap], rax
+        $mov [glob.process_heap], rax
         $test rax, rax
         $jz .error
 
@@ -431,6 +587,7 @@ deinit:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
         $sub rsp, .k_stack_size
+        $call wait_for_gpu
         $call demo_deinit
         $add rsp, .k_stack_size
         $ret
@@ -510,135 +667,6 @@ winproc:
   .return:
         $add rsp, .k_stack_size
         $ret
-;========================================================================
-section '.data' data readable writeable
-
-align 8
-demo:
-  .dxgifactory dq 0
-  .device dq 0
-  .cmdqueue dq 0
-  .cmdalloc dq k_frame_count dup 0
-  .cmdlist dq 0
-  .swapchain dq 0
-  .swapchain_heap dq 0
-  .swapchain_heap_start dq 0
-  .swapchain_buffer dq k_swapchain_buffer_count dup 0
-  .frame_fence dq 0
-  .frame_fence_event dq 0
-  .cpu_completed_frames dq 0
-
-  ;.scene_init dq 0
-  ;.scene_deinit dq 0
-  ;.scene_update dq 0
-
-  align 8
-  .viewport D3D12_VIEWPORT
-  align 8
-  .scissor D3D12_RECT
-
-  align 4
-  .rtv_size dd 0
-  .cbv_srv_uav_size dd 0
-  .back_buffer_index dd 0
-  .frame_index dd 0
-  .clear_color dd 0.0,0.2,0.4,1.0
-
-align 8
-scene1:
-  .pso dq 0
-  .rootsig dq 0
-
-  align 8
-  rept k_frame_count n:0 { .frame_resources#n frame_resources }
-
-  align 4
-  .eye_half_fovy dd 0.52359876 ; pi / 6
-  .eye_nearz dd 1.0
-  .eye_farz dd 100.0
-
-  align 16
-  .eye_position: dd 1.7,1.7,-1.7,1.0
-  .eye_focus: dd 0.0,0.0,0.0,1.0
-  .eye_up: dd 0.0,1.0,0.0,0.0
-  .tri_v0: dd -0.7,-0.7,0.0,1.0
-  .tri_v1: dd 0.0,0.7,0.0,1.0
-  .tri_v2: dd 0.7,-0.7,0.0,1.0
-
-  align 1
-  .s_position db 'POSITION',0
-
-align 8
-win_handle dq 0
-win_width dd 1280
-win_height dd 720
-
-align 8
-process_heap dq 0
-time dq 0
-time_delta dd 0,0
-
-align 8
-get_time.perf_counter dq 0
-get_time.perf_freq dq 0
-get_time.first_perf_counter dq 0
-
-update_frame_stats.prev_time dq 0
-update_frame_stats.prev_update_time dq 0
-update_frame_stats.frame dd 0,0
-
-align 8
-k_f64_1000000_0 dq 1000000.0
-k_f64_1_0 dq 1.0
-
-align 1
-k_win_class_name db 'eneida',0
-k_win_text_fmt db '[%d fps  %d us] eneida',0
-
-IID_IDXGISwapChain3 GUID 0x94d99bdb,0xf1f8,0x4ab0,0xb2,0x36,0x7d,0xa0,0x17,0x0e,0xda,0xb1
-IID_IDXGIFactory4 GUID 0x1bc6ea02,0xef36,0x464f,0xbf,0x0c,0x21,0xca,0x39,0xe5,0x16,0x8a
-IID_ID3D12Device GUID 0x189819f1,0x1db6,0x4b57,0xbe,0x54,0x18,0x21,0x33,0x9b,0x85,0xf7
-IID_ID3D12Debug GUID 0x344488b7,0x6846,0x474b,0xb9,0x89,0xf0,0x27,0x44,0x82,0x45,0xe0
-IID_ID3D12CommandQueue GUID 0x0ec870a6,0x5d7e,0x4c22,0x8c,0xfc,0x5b,0xaa,0xe0,0x76,0x16,0xed
-IID_ID3D12CommandAllocator GUID 0x6102dee4,0xaf59,0x4b09,0xb9,0x99,0xb4,0x4d,0x73,0xf0,0x9b,0x24
-IID_ID3D12CommandList GUID 0x7116d91c,0xe7e4,0x47ce,0xb8,0xc6,0xec,0x81,0x68,0xf4,0x37,0xe5
-IID_ID3D12GraphicsCommandList GUID 0x5b160d0f,0xac1b,0x4185,0x8b,0xa8,0xb3,0xae,0x42,0xa5,0xa4,0x55
-IID_ID3D12DescriptorHeap GUID 0x8efb471d,0x616c,0x4f49,0x90,0xf7,0x12,0x7b,0xb7,0x63,0xfa,0x51
-IID_ID3D12Resource GUID 0x696442be,0xa72e,0x4059,0xbc,0x79,0x5b,0x5c,0x98,0x04,0x0f,0xad
-IID_ID3D12Fence GUID 0x0a753dcf,0xc4d8,0x4b91,0xad,0xf6,0xbe,0x5a,0x60,0xd9,0x5a,0x76
-IID_ID3D12RootSignature GUID 0xc54a6b66,0x72df,0x4ee8,0x8b,0xe5,0xa9,0x46,0xa1,0x42,0x92,0x14
-IID_ID3D12PipelineState GUID 0x765a30f3,0xf624,0x4c6f,0xa8,0x28,0xac,0xe9,0x48,0x62,0x24,0x45
-
-; math constants
-align 64
-k_f32_identity_r0: dd 1.0,0.0,0.0,0.0
-k_f32_identity_r1: dd 0.0,1.0,0.0,0.0
-k_f32_identity_r2: dd 0.0,0.0,1.0,0.0
-k_f32_identity_r3: dd 0.0,0.0,0.0,1.0
-k_f32_pi: dd 8 dup 3.141592654
-k_f32_two_pi: dd 8 dup 6.283185307
-k_f32_reciprocal_two_pi: dd 8 dup 0.159154943
-k_f32_half_pi: dd 8 dup 1.570796327
-k_f32_half: dd 8 dup 0.5
-k_f32_sin_coefficients: dd -0.16666667,0.0083333310,-0.00019840874,2.7525562e-06,-2.3889859e-08,-0.16665852,0.0083139502,-0.00018524670
-k_f32_cos_coefficients: dd -0.5,0.041666638,-0.0013888378,2.4760495e-05,-2.6051615e-07,-0.49992746,0.041493919,-0.0012712436
-k_f32_one: dd 8 dup 1.0
-k_f32_negative_one: dd 8 dup -1.0
-k_i32_negative_zero: dd 8 dup 0x80000000
-k_i32_negative_zero_x0: dd 0x80000000,0,0,0,0,0,0,0
-k_i32_negative_zero_y0: dd 0,0x80000000,0,0,0,0,0,0
-k_i32_negative_zero_z0: dd 0,0,0x80000000,0,0,0,0,0
-k_i32_perm_x0_y1: dd 0,0,0,0,5,5,5,5
-k_i32_perm_z0_w1: dd 2,2,2,2,7,7,7,7
-k_i32_perm_y0_x1: dd 1,1,1,1,4,4,4,4
-k_i32_perm_w0_z1: dd 3,3,3,3,6,6,6,6
-
-align 8
-cso_object_vs: file 'hlsl/object_vs.cso'
-  .size = $ - cso_object_vs
-align 8
-cso_object_ps: file 'hlsl/object_ps.cso'
-  .size = $ - cso_object_ps
 ;========================================================================
 section '.idata' import data readable writeable
 

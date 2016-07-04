@@ -6,6 +6,7 @@ scene1_init:
         $sub rsp, .k_stack_size
   virtual at rsp
   rept 8 n { .param#n dq ? }
+  .ptr dq ?
   dalign 8
   .pso_desc D3D12_GRAPHICS_PIPELINE_STATE_DESC
   dalign 8
@@ -31,14 +32,14 @@ scene1_init:
         $mov [.buffer_res_desc.Layout], D3D12_TEXTURE_LAYOUT_ROW_MAJOR
 
         $mov esi, k_frame_count
-        $lea rbx, [scene1.frame_resources0]
+        $lea rbx, [glob.frame_res]
   virtual at rbx
   .frame_res frame_resources
   end virtual
 
   .frame_resources_loop:
-        ; constant buffer: create
-        $mov rcx, [demo.device]
+        ; create constant buffer
+        $mov rcx, [glob.device]
         $lea rdx, [.upload_heap_props]
         $mov r8d, D3D12_HEAP_FLAG_NONE
         $lea r9, [.buffer_res_desc]
@@ -49,61 +50,86 @@ scene1_init:
         $comcall ID3D12Device.CreateCommittedResource
         $checkhr eax, .error
 
-        ; vertex buffer: create
-        $mov rcx, [demo.device]
-        $lea rdx, [.upload_heap_props]
-        $mov r8d, D3D12_HEAP_FLAG_NONE
-        $lea r9, [.buffer_res_desc]
-        $mov [.param5], D3D12_RESOURCE_STATE_GENERIC_READ
-        $mov [.param6], 0
-        $lea [.param7], rax, [IID_ID3D12Resource]
-        $lea [.param8], rax, [.frame_res.vertex_buffer]
-        $comcall ID3D12Device.CreateCommittedResource
-        $checkhr eax, .error
-
-        ; constant buffer: map (get CPU address)
+        ; map constant buffer
         $mov rcx, [.frame_res.constant_buffer]
         $xor edx, edx
         $lea r8, [.empty_range]
-        $lea r9, [.frame_res.constant_buffer_ptr]
+        $lea r9, [.frame_res.constant_buffer_addr]
         $comcall ID3D12Resource.Map
         $checkhr eax, .error
 
-        ; vertex buffer: map (get CPU address)
-        $mov rcx, [.frame_res.vertex_buffer]
-        $xor edx, edx
-        $lea r8, [.empty_range]
-        $lea r9, [.frame_res.vertex_buffer_ptr]
-        $comcall ID3D12Resource.Map
-        $checkhr eax, .error
-
-        ; constant buffer: get GPU address
+        ; create constant buffer view
         $mov rcx, [.frame_res.constant_buffer]
         $comcall ID3D12Resource.GetGPUVirtualAddress
-        $mov [.frame_res.constant_buffer_gpu_ptr], rax
-
-        ; vertex buffer: get GPU address
-        $mov rcx, [.frame_res.vertex_buffer]
-        $comcall ID3D12Resource.GetGPUVirtualAddress
-        $mov [.frame_res.vertex_buffer_view.BufferLocation], rax
-        $mov [.frame_res.vertex_buffer_view.SizeInBytes], 1024
-        $mov [.frame_res.vertex_buffer_view.StrideInBytes], 16
+        $mov [.frame_res.constant_buffer_view], rax
 
         $add rbx, sizeof.frame_resources
         $sub esi, 1
         $jnz .frame_resources_loop
 
 
-        $lea [.input_element_desc.SemanticName], rax, [scene1.s_position]
+
+        ; create vertex buffer
+        $mov rcx, [glob.device]
+        $lea rdx, [.upload_heap_props]
+        $mov r8d, D3D12_HEAP_FLAG_NONE
+        $lea r9, [.buffer_res_desc]
+        $mov [.param5], D3D12_RESOURCE_STATE_GENERIC_READ
+        $mov [.param6], 0
+        $lea [.param7], rax, [IID_ID3D12Resource]
+        $lea [.param8], rax, [glob.mesh_vb]
+        $comcall ID3D12Device.CreateCommittedResource
+        $checkhr eax, .error
+
+        ; map vertex buffer
+        $mov rcx, [glob.mesh_vb]
+        $mov edx, 0
+        $lea r8, [.empty_range]
+        $lea r9, [.ptr]
+        $comcall ID3D12Resource.Map
+        $checkhr eax, .error
+
+        ; fill vertex buffer
+        $mov rcx, [.ptr]
+        $vmovaps xmm0, [glob.tri_v0]
+        $vmovaps [rcx], xmm0
+        $vmovaps xmm0, [glob.tri_v1]
+        $vmovaps [rcx+16], xmm0
+        $vmovaps xmm0, [glob.tri_v2]
+        $vmovaps [rcx+32], xmm0
+
+        ; unmap vertex buffer
+        $mov rcx, [glob.mesh_vb]
+        $mov edx, 0
+        $lea r8, [.empty_range]
+        $comcall ID3D12Resource.Unmap
+        $checkhr eax, .error
+
+        ; create vertex buffer view
+        $mov rcx, [glob.mesh_vb]
+        $comcall ID3D12Resource.GetGPUVirtualAddress
+        $mov [glob.mesh_vb_view.BufferLocation], rax
+        $mov [glob.mesh_vb_view.SizeInBytes], 1024
+        $mov [glob.mesh_vb_view.StrideInBytes], 16
+
+
+        ; load VS
+        $lea rcx, [glob.sz_vs_object]
+        $call load_file
+        $mov [.pso_desc.VS.pShaderBytecode], rax
+        $mov [.pso_desc.VS.BytecodeLength], rdx
+        ; load PS
+        $lea rcx, [glob.sz_ps_object]
+        $call load_file
+        $mov [.pso_desc.PS.pShaderBytecode], rax
+        $mov [.pso_desc.PS.BytecodeLength], rdx
+
+        $lea [.input_element_desc.SemanticName], rax, [glob.sz_position]
         $mov [.input_element_desc.SemanticIndex], 0
         $mov [.input_element_desc.Format], DXGI_FORMAT_R32G32B32A32_FLOAT
         $mov [.input_element_desc.InputSlot], 0
         $mov [.input_element_desc.AlignedByteOffset], 0
 
-        $lea [.pso_desc.VS.pShaderBytecode], rax, [cso_object_vs]
-        $mov [.pso_desc.VS.BytecodeLength], cso_object_vs.size
-        $lea [.pso_desc.PS.pShaderBytecode], rax, [cso_object_ps]
-        $mov [.pso_desc.PS.BytecodeLength], cso_object_ps.size
         $lea [.pso_desc.InputLayout.pInputElementDescs], rax, [.input_element_desc]
         $mov [.pso_desc.InputLayout.NumElements], 1
         $mov [.pso_desc.BlendState.RenderTarget0.RenderTargetWriteMask], $0f
@@ -115,19 +141,19 @@ scene1_init:
         $mov [.pso_desc.RTVFormats], DXGI_FORMAT_R8G8B8A8_UNORM
         $mov [.pso_desc.SampleDesc.Count], 1
 
-        $mov rcx, [demo.device]
+        $mov rcx, [glob.device]
         $lea rdx, [.pso_desc]
         $lea r8, [IID_ID3D12PipelineState]
-        $lea r9, [scene1.pso]
+        $lea r9, [glob.pso]
         $comcall ID3D12Device.CreateGraphicsPipelineState
         $checkhr eax, .error
 
-        $mov rcx, [demo.device]
+        $mov rcx, [glob.device]
         $xor edx, edx
-        $lea r8, [cso_object_vs]
-        $mov r9d, cso_object_vs.size
+        $mov r8, [.pso_desc.VS.pShaderBytecode]
+        $mov r9, [.pso_desc.VS.BytecodeLength]
         $lea [.param5], rax, [IID_ID3D12RootSignature]
-        $lea [.param6], rax, [scene1.rootsig]
+        $lea [.param6], rax, [glob.rootsig]
         $comcall ID3D12Device.CreateRootSignature
         $checkhr eax, .error
 
@@ -162,27 +188,33 @@ scene1_update:
   .k_stack_size = $-$$
   end virtual
 
-        $mov r12d, [demo.frame_index]
+        $mov r12d, [glob.frame_index]
         $imul r12d, sizeof.frame_resources
-        $lea r12, [r12+scene1.frame_resources0]
+        $lea r12, [r12+glob.frame_res]
   virtual at r12
   .frame_res frame_resources
   end virtual
 
+        ; init transition barrier
+        $mov [.barrier.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
+        $mov [.barrier.Flags], 0
+        $mov [.barrier.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
+
+
         ; update rotation matrix
-        $vmovss xmm0, [scene1.eye_half_fovy]
+        $vmovss xmm0, [glob.eye_half_fovy]
         $call fast_sincosf
-        $vmovss xmm2, [demo.viewport.Width]
-        $vdivss xmm2, xmm2, [demo.viewport.Height]
-        $vmovss xmm3, [scene1.eye_nearz]
-        $vmovss xmm4, [scene1.eye_farz]
+        $vmovss xmm2, [glob.viewport.Width]
+        $vdivss xmm2, xmm2, [glob.viewport.Height]
+        $vmovss xmm3, [glob.eye_nearz]
+        $vmovss xmm4, [glob.eye_farz]
         $matrixPerspectiveFov
         $vmovaps [.matrix], ymm0
         $vmovaps [.matrix+32], ymm1
 
-        $vmovaps xmm0, [scene1.eye_position]
-        $vmovaps xmm1, [scene1.eye_focus]
-        $vmovaps xmm2, [scene1.eye_up]
+        $vmovaps xmm0, [glob.eye_position]
+        $vmovaps xmm1, [glob.eye_focus]
+        $vmovaps xmm2, [glob.eye_up]
         $call matrix_look_at
 
         $vmovaps ymm2, [.matrix]
@@ -191,95 +223,83 @@ scene1_update:
         $vmovaps [.matrix], ymm0
         $vmovaps [.matrix+32], ymm1
 
-        $vcvtsd2ss xmm0, xmm0, [time]
+        $vcvtsd2ss xmm0, xmm0, [glob.time]
         $call fast_sincosf
         $matrixRotationX
         $vmovaps ymm2, [.matrix]
         $vmovaps ymm3, [.matrix+32]
         $call matrix_mul_transpose              ; transpose(rotation*lookat*perspective)
 
+
         ; update constant buffer
-        $mov rcx, [.frame_res.constant_buffer_ptr]
+        $mov rcx, [.frame_res.constant_buffer_addr]
         $vmovaps [rcx], ymm0
         $vmovaps [rcx+32], ymm1
 
-        ; update vertex buffer
-        $mov rcx, [.frame_res.vertex_buffer_ptr]
-        $vmovaps xmm0, [scene1.tri_v0]
-        $vmovaps [rcx], xmm0
-        $vmovaps xmm0, [scene1.tri_v1]
-        $vmovaps [rcx+16], xmm0
-        $vmovaps xmm0, [scene1.tri_v2]
-        $vmovaps [rcx+32], xmm0
 
-        ; init transition barrier
-        $mov [.barrier.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
-        $mov [.barrier.Flags], 0
-        $mov [.barrier.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 
         ; reset completed command allocator
-        $mov eax, [demo.frame_index]
-        $mov rcx, [demo.cmdalloc+rax*8]
+        $mov rcx, [.frame_res.cmdalloc]
         $comcall ID3D12CommandAllocator.Reset
 
         ; begin commands recording
-        $mov eax, [demo.frame_index]
-        $mov rcx, [demo.cmdlist]
-        $mov rdx, [demo.cmdalloc+rax*8]
-        $mov r8, [scene1.pso]
+        $mov rcx, [glob.cmdlist]
+        $mov rdx, [.frame_res.cmdalloc]
+        $mov r8, [glob.pso]
         $comcall ID3D12GraphicsCommandList.Reset
 
-        $mov rcx, [demo.cmdlist]
+        $mov rcx, [glob.cmdlist]
         $mov edx, 1
-        $lea r8, [demo.viewport]
+        $lea r8, [glob.viewport]
         $comcall ID3D12GraphicsCommandList.RSSetViewports
-        $mov rcx, [demo.cmdlist]
+
+        $mov rcx, [glob.cmdlist]
         $mov edx, 1
-        $lea r8, [demo.scissor]
+        $lea r8, [glob.scissor]
         $comcall ID3D12GraphicsCommandList.RSSetScissorRects
 
         ; set root signature and resources
-        $mov rcx, [demo.cmdlist]
-        $mov rdx, [scene1.rootsig]
+        $mov rcx, [glob.cmdlist]
+        $mov rdx, [glob.rootsig]
         $comcall ID3D12GraphicsCommandList.SetGraphicsRootSignature
 
-        $mov rcx, [demo.cmdlist]
+        $mov rcx, [glob.cmdlist]
         $xor edx, edx
-        $mov r8, [.frame_res.constant_buffer_gpu_ptr]
+        $mov r8, [.frame_res.constant_buffer_view]
         $comcall ID3D12GraphicsCommandList.SetGraphicsRootConstantBufferView
 
         ; vertex buffer view
-        $mov rcx, [demo.cmdlist]
-        $xor edx, edx
+        $mov rcx, [glob.cmdlist]
+        $mov edx, 0
         $mov r8d, 1
-        $lea r9, [.frame_res.vertex_buffer_view]
+        $lea r9, [glob.mesh_vb_view]
         $comcall ID3D12GraphicsCommandList.IASetVertexBuffers
 
         ; back buffer to D3D12_RESOURCE_STATE_RENDER_TARGET
-        $mov eax, [demo.back_buffer_index]
-        $mov rax, [demo.swapchain_buffer+rax*8]
+        $mov eax, [glob.back_buffer_index]
+        $mov rax, [glob.swapchain_buffers+rax*8]
         $transitionBarrier .barrier, rax, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
-        $mov rcx, [demo.cmdlist]
+        $mov rcx, [glob.cmdlist]
         $mov edx, 1
         $lea r8, [.barrier]
         $comcall ID3D12GraphicsCommandList.ResourceBarrier
 
         ; get back buffer handle
-        $mov eax, [demo.back_buffer_index]
-        $imul eax, [demo.rtv_size]
-        $add rax, [demo.swapchain_heap_start]
+        $mov eax, [glob.back_buffer_index]
+        $imul eax, [glob.rtv_size]
+        $add rax, [glob.swapchain_heap_start]
         $mov [.back_buffer_handle], rax
 
         ; clear back buffer
-        $mov rcx, [demo.cmdlist]
+        $mov rcx, [glob.cmdlist]
         $mov rdx, [.back_buffer_handle]
-        $lea r8, [demo.clear_color]
+        $lea r8, [glob.clear_color]
         $xor r9d, r9d
         $mov [.param5], 0
         $comcall ID3D12GraphicsCommandList.ClearRenderTargetView
 
         ; set back buffer as render target
-        $mov rcx, [demo.cmdlist]
+        $mov rcx, [glob.cmdlist]
         $mov edx, 1
         $lea r8, [.back_buffer_handle]
         $mov r9d, 1
@@ -287,10 +307,10 @@ scene1_update:
         $comcall ID3D12GraphicsCommandList.OMSetRenderTargets
 
         ; draw
-        $mov rcx, [demo.cmdlist]
+        $mov rcx, [glob.cmdlist]
         $mov edx, D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST
         $comcall ID3D12GraphicsCommandList.IASetPrimitiveTopology
-        $mov rcx, [demo.cmdlist]
+        $mov rcx, [glob.cmdlist]
         $mov edx, 3
         $mov r8d, 1
         $xor r9d, r9d
@@ -298,20 +318,21 @@ scene1_update:
         $comcall ID3D12GraphicsCommandList.DrawInstanced
 
         ; back buffer to D3D12_RESOURCE_STATE_PRESENT
-        $mov eax, [demo.back_buffer_index]
-        $mov rax, [demo.swapchain_buffer+rax*8]
+        $mov eax, [glob.back_buffer_index]
+        $mov rax, [glob.swapchain_buffers+rax*8]
         $transitionBarrier .barrier, rax, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT
-        $mov rcx, [demo.cmdlist]
+        $mov rcx, [glob.cmdlist]
         $mov edx, 1
         $lea r8, [.barrier]
         $comcall ID3D12GraphicsCommandList.ResourceBarrier
 
+
         ; finish recording and execute commands
-        $mov rcx, [demo.cmdlist]
+        $mov rcx, [glob.cmdlist]
         $comcall ID3D12GraphicsCommandList.Close
-        $mov rcx, [demo.cmdqueue]
+        $mov rcx, [glob.cmdqueue]
         $mov edx, 1
-        $lea r8, [demo.cmdlist]
+        $lea r8, [glob.cmdlist]
         $comcall ID3D12CommandQueue.ExecuteCommandLists
 
         $add rsp, .k_stack_size

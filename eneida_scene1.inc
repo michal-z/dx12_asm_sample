@@ -128,6 +128,7 @@ scene1_init:
         $call load_file
         $mov [.pso_desc.VS.pShaderBytecode], rax
         $mov [.pso_desc.VS.BytecodeLength], rdx
+
         ; load PS
         $lea rcx, [glob.sz_ps_object]
         $call load_file
@@ -158,6 +159,7 @@ scene1_init:
         $comcall ID3D12Device.CreateGraphicsPipelineState
         $checkhr eax, .error
 
+
         $mov rcx, [glob.device]
         $xor edx, edx
         $mov r8, [.pso_desc.VS.pShaderBytecode]
@@ -166,6 +168,9 @@ scene1_init:
         $lea [.param6], rax, [glob.rootsig]
         $comcall ID3D12Device.CreateRootSignature
         $checkhr eax, .error
+
+        $free [.pso_desc.VS.pShaderBytecode]
+        $free [.pso_desc.PS.pShaderBytecode]
 
         ; success
         $mov eax, 1

@@ -238,3 +238,67 @@ get_upload_buffer:
         $add rsp, .k_stack_size
         $ret
 ;=============================================================================
+; in: rcx - addr of zero-terminated file name
+; out: rax - texture 2D resource
+falign
+create_texture_from_file:
+;-----------------------------------------------------------------------------
+        $sub rsp, .k_stack_size
+  virtual at rsp
+  rept 9 n { .param#n dq ? }
+  .texture dq ?
+  .row_count dd ?, ?
+  .row_size dq ?
+  .buffer_size dq ?
+  dalign 8
+  .upload_heap_props D3D12_HEAP_PROPERTIES
+  dalign 8
+  .texture_desc D3D12_RESOURCE_DESC
+  dalign 8
+  .layout D3D12_PLACED_SUBRESOURCE_FOOTPRINT
+  dalign 32
+  .k_stack_size = $-$$+24
+  end virtual
+        $zeroStack .k_stack_size
+
+        $mov [.upload_heap_props.Type], D3D12_HEAP_TYPE_DEFAULT
+        $mov [.texture_desc.Dimension], D3D12_RESOURCE_DIMENSION_TEXTURE2D
+        $mov [.texture_desc.Width], 4
+        $mov [.texture_desc.Height], 4
+        $mov [.texture_desc.DepthOrArraySize], 1
+        $mov [.texture_desc.MipLevels], 0
+        $mov [.texture_desc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
+        $mov [.texture_desc.SampleDesc.Count], 1
+        $mov [.texture_desc.Layout], D3D12_TEXTURE_LAYOUT_UNKNOWN
+
+        ; create texture
+        $mov rcx, [glob.device]
+        $lea rdx, [.upload_heap_props]
+        $mov r8d, D3D12_HEAP_FLAG_NONE
+        $lea r9, [.texture_desc]
+        $mov [.param5], D3D12_RESOURCE_STATE_COPY_DEST
+        $mov [.param6], 0
+        $lea [.param7], rax, [IID_ID3D12Resource]
+        $lea [.param8], rax, [.texture]
+        $comcall ID3D12Device.CreateCommittedResource
+        $checkhr eax, .error
+
+        $mov rcx, [glob.device]
+        $lea rdx, [.texture_desc]
+        $mov r8d, 0                             ; subresource index
+        $mov r9d, 1                             ; number of subresources
+        $mov [.param5], 0                       ; base offset
+        $lea [.param6], rax, [.layout]
+        $lea [.param7], rax, [.row_count]
+        $lea [.param8], rax, [.row_size]
+        $lea [.param9], rax, [.buffer_size]
+        $comcall ID3D12Device.GetCopyableFootprints
+
+        $mov eax, 1
+        $jmp .return
+  .error:
+        $xor eax, eax
+  .return:
+        $add rsp, .k_stack_size
+        $ret
+;=============================================================================

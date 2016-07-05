@@ -80,10 +80,10 @@ struc GUID p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 {
   db p10 }
 
 virtual at 0
-  IUnknown:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
+IUnknown:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
 end virtual
 
 include '$instructions.inc'

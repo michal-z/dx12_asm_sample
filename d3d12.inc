@@ -295,13 +295,13 @@ struc D3D12_RESOURCE_BARRIER {
   .Flags dd ?
   .Transition D3D12_RESOURCE_TRANSITION_BARRIER
 
-virtual at .Transition
+  virtual at .Transition
   .Aliasing D3D12_RESOURCE_ALIASING_BARRIER
-end virtual
+  end virtual
 
-virtual at .Transition
+  virtual at .Transition
   .UAV D3D12_RESOURCE_UAV_BARRIER
-end virtual }
+  end virtual }
 struc_offsets_size D3D12_RESOURCE_BARRIER
 
 struc D3D12_DESCRIPTOR_RANGE {
@@ -328,13 +328,13 @@ struc D3D12_ROOT_PARAMETER {
   .ParameterType dd ?,?
   .DescriptorTable D3D12_ROOT_DESCRIPTOR_TABLE
 
-virtual at .DescriptorTable
+  virtual at .DescriptorTable
   .Constants D3D12_ROOT_CONSTANTS
-end virtual
+  end virtual
 
-virtual at .DescriptorTable
+  virtual at .DescriptorTable
   .Descriptor D3D12_ROOT_DESCRIPTOR
-end virtual
+  end virtual
 
   .ShaderVisibility dd ?,? }
 
@@ -466,7 +466,7 @@ struc D3D12_GRAPHICS_PIPELINE_STATE_DESC {
   .NodeMask dd ?,?
   .CachedPSO D3D12_CACHED_PIPELINE_STATE
   .Flags dd ?,? }
-STRUC_OFFSETS_SIZE D3D12_GRAPHICS_PIPELINE_STATE_DESC
+struc_offsets_size D3D12_GRAPHICS_PIPELINE_STATE_DESC
 
 struc D3D12_RANGE {
   .Begin dq ?
@@ -548,52 +548,78 @@ struc D3D12_RESOURCE_DESC {
   .Layout dd ?
   .Flags dd ?,? }
 
+struc D3D12_SUBRESOURCE_FOOTPRINT {
+  .Format dd ?
+  .Width dd ?
+  .Height dd ?
+  .Depth dd ?
+  .RowPitch dd ? }
+
+struc D3D12_PLACED_SUBRESOURCE_FOOTPRINT {
+  .Offset dq ?
+  .Footprint D3D12_SUBRESOURCE_FOOTPRINT
+  dd ? }
+
+D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX = 0
+D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT = 1
+
+struc D3D12_TEXTURE_COPY_LOCATION {
+  .pResource dq ?
+  .Type dd ?
+  .PlacedFootprint D3D12_PLACED_SUBRESOURCE_FOOTPRINT
+
+  virtual at .PlacedFootprint
+  .SubresourceIndex dd ?
+  end virtual
+
+  dd ? }
+
 virtual at 0
-  ID3D12Device:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetPrivateData rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .SetName rq 1
-    .GetNodeCount rq 1
-    .CreateCommandQueue rq 1
-    .CreateCommandAllocator rq 1
-    .CreateGraphicsPipelineState rq 1
-    .CreateComputePipelineState rq 1
-    .CreateCommandList rq 1
-    .CheckFeatureSupport rq 1
-    .CreateDescriptorHeap rq 1
-    .GetDescriptorHandleIncrementSize rq 1
-    .CreateRootSignature rq 1
-    .CreateConstantBufferView rq 1
-    .CreateShaderResourceView rq 1
-    .CreateUnorderedAccessView rq 1
-    .CreateRenderTargetView rq 1
-    .CreateDepthStencilView rq 1
-    .CreateSampler rq 1
-    .CopyDescriptors rq 1
-    .CopyDescriptorsSimple rq 1
-    .GetResourceAllocationInfo rq 1
-    .GetCustomHeapProperties rq 1
-    .CreateCommittedResource rq 1
-    .CreateHeap rq 1
-    .CreatePlacedResource rq 1
-    .CreateReservedResource rq 1
-    .CreateSharedHandle rq 1
-    .OpenSharedHandle rq 1
-    .OpenSharedHandleByName rq 1
-    .MakeResident rq 1
-    .Evict rq 1
-    .CreateFence rq 1
-    .GetDeviceRemovedReason rq 1
-    .GetCopyableFootprints rq 1
-    .CreateQueryHeap rq 1
-    .SetStablePowerState rq 1
-    .CreateCommandSignature rq 1
-    .GetResourceTiling rq 1
-    .GetAdapterLuid rq 1
+ID3D12Device:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetPrivateData rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .SetName rq 1
+  .GetNodeCount rq 1
+  .CreateCommandQueue rq 1
+  .CreateCommandAllocator rq 1
+  .CreateGraphicsPipelineState rq 1
+  .CreateComputePipelineState rq 1
+  .CreateCommandList rq 1
+  .CheckFeatureSupport rq 1
+  .CreateDescriptorHeap rq 1
+  .GetDescriptorHandleIncrementSize rq 1
+  .CreateRootSignature rq 1
+  .CreateConstantBufferView rq 1
+  .CreateShaderResourceView rq 1
+  .CreateUnorderedAccessView rq 1
+  .CreateRenderTargetView rq 1
+  .CreateDepthStencilView rq 1
+  .CreateSampler rq 1
+  .CopyDescriptors rq 1
+  .CopyDescriptorsSimple rq 1
+  .GetResourceAllocationInfo rq 1
+  .GetCustomHeapProperties rq 1
+  .CreateCommittedResource rq 1
+  .CreateHeap rq 1
+  .CreatePlacedResource rq 1
+  .CreateReservedResource rq 1
+  .CreateSharedHandle rq 1
+  .OpenSharedHandle rq 1
+  .OpenSharedHandleByName rq 1
+  .MakeResident rq 1
+  .Evict rq 1
+  .CreateFence rq 1
+  .GetDeviceRemovedReason rq 1
+  .GetCopyableFootprints rq 1
+  .CreateQueryHeap rq 1
+  .SetStablePowerState rq 1
+  .CreateCommandSignature rq 1
+  .GetResourceTiling rq 1
+  .GetAdapterLuid rq 1
 end virtual
 
 virtual at 0

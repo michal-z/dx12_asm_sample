@@ -64,6 +64,33 @@ load_file:
         $pop rbx rsi rdi
         $ret
 ;=============================================================================
+; out: xmm0 - current time since application start in seconds
+falign
+get_time:
+;-----------------------------------------------------------------------------
+  .k_stack_size = 32*1+24
+        $sub rsp, .k_stack_size
+        $mov rax, [.perf_freq]
+        $test rax, rax
+        $jnz @f
+
+        $lea rcx, [.perf_freq]
+        $icall QueryPerformanceFrequency
+        $lea rcx, [.first_perf_counter]
+        $icall QueryPerformanceCounter
+
+  @@:   $lea rcx, [.perf_counter]
+        $icall QueryPerformanceCounter
+        $mov rcx, [.perf_counter]
+        $sub rcx, [.first_perf_counter]
+        $mov rdx, [.perf_freq]
+        $vxorps xmm0, xmm0, xmm0
+        $vcvtsi2sd xmm1, xmm0, rcx
+        $vcvtsi2sd xmm2, xmm0, rdx
+        $vdivsd xmm0, xmm1, xmm2
+        $add rsp, .k_stack_size
+        $ret
+;=============================================================================
 ; in: rcx - buffer size, edx - D3D12_HEAP_TYPE_*, r8d - D3D12_RESOURCE_STATE_*
 ; out: rax - buffer resource
 falign
@@ -147,6 +174,64 @@ create_upload_buffer:
         $jmp .return
   .error:
         $safeRelease [.buffer]
+        $xor eax, eax
+        $xor edx, edx
+  .return:
+        $add rsp, .k_stack_size
+        $ret
+;=============================================================================
+falign
+wait_for_gpu:
+;-----------------------------------------------------------------------------
+  .k_stack_size = 32*1+24
+        $sub rsp, .k_stack_size
+
+        $add [glob.cpu_completed_fences], 1
+
+        $mov rcx, [glob.cmdqueue]
+        $mov rdx, [glob.frame_fence]
+        $mov r8, [glob.cpu_completed_fences]
+        $comcall ID3D12CommandQueue.Signal
+
+        $mov rcx, [glob.frame_fence]
+        $mov rdx, [glob.cpu_completed_fences]
+        $mov r8, [glob.frame_fence_event]
+        $comcall ID3D12Fence.SetEventOnCompletion
+
+        $mov rcx, [glob.frame_fence_event]
+        $mov edx, INFINITE
+        $icall WaitForSingleObject
+
+        $add rsp, .k_stack_size
+        $ret
+;=============================================================================
+; in: rcx - buffer size
+; out: rax - buffer resource, rdx - cpu buffer address
+falign
+get_upload_buffer:
+;-----------------------------------------------------------------------------
+        $sub rsp, .k_stack_size
+  virtual at rsp
+  rept 4 n { .param#n dq ? }
+  .index dd ?, ?
+  dalign 32
+  .k_stack_size = $-$$+24
+  end virtual
+
+        $mov eax, 1
+        $lock $xadd [glob.upload_buffers_count], eax
+        $cmp eax, k_upload_buffers_count
+        $jae .error
+        $mov [.index], eax
+
+        $call create_upload_buffer
+        $test rax, rax
+        $jz .error
+        $mov r8d, [.index]
+        $mov [glob.upload_buffers+r8*8], rax
+        $jmp .return
+
+  .error:
         $xor eax, eax
         $xor edx, edx
   .return:

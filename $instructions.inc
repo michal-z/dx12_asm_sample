@@ -65,3 +65,6 @@ $vunpcklps fix vunpcklps
 $vunpckhps fix vunpckhps
 $vdivss fix vdivss
 $vinsertps fix vinsertps
+$lock fix lock
+$xadd fix xadd
+$jae fix jae

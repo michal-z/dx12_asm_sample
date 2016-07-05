@@ -5,32 +5,25 @@ scene1_init:
         $push rsi rbx
         $sub rsp, .k_stack_size
   virtual at rsp
-  rept 8 n { .param#n dq ? }
+  rept 6 n { .param#n dq ? }
+  .upload_vb dq ?
   dalign 8
   .pso_desc D3D12_GRAPHICS_PIPELINE_STATE_DESC
   dalign 8
-  .upload_heap_props D3D12_HEAP_PROPERTIES
-  dalign 8
-  .buffer_res_desc D3D12_RESOURCE_DESC
-  dalign 8
-  .empty_range D3D12_RANGE
-  dalign 8
   .input_element_desc D3D12_INPUT_ELEMENT_DESC
+  dalign 8
+  .barrier D3D12_RESOURCE_BARRIER
   dalign 32
   .k_stack_size = $-$$+8
   end virtual
         $zeroStack .k_stack_size
 
-        $mov [.upload_heap_props.Type], D3D12_HEAP_TYPE_DEFAULT
-        $mov [.buffer_res_desc.Dimension], D3D12_RESOURCE_DIMENSION_BUFFER
-        $mov [.buffer_res_desc.Width], 1024
-        $mov [.buffer_res_desc.Height], 1
-        $mov [.buffer_res_desc.DepthOrArraySize], 1
-        $mov [.buffer_res_desc.MipLevels], 1
-        $mov [.buffer_res_desc.SampleDesc.Count], 1
-        $mov [.buffer_res_desc.Layout], D3D12_TEXTURE_LAYOUT_ROW_MAJOR
+        ; init transition barrier
+        $mov [.barrier.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
+        $mov [.barrier.Flags], 0
+        $mov [.barrier.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 
-        $mov esi, k_frame_count
+
         $lea rbx, [glob.frame_res]
   virtual at rbx
   .frame_res frame_resources
@@ -48,15 +41,20 @@ scene1_init:
         $mov [.frame_res.constant_buffer_view], rax
 
         $add rbx, sizeof.frame_resources
-        $sub esi, 1
-        $jnz .frame_resources_loop
-
+        $cmp rbx, glob.frame_res + k_frame_count * sizeof.frame_resources
+        $jb .frame_resources_loop
 
 
         ; create vertex buffer
         $mov ecx, 1024
-        $call create_upload_buffer
+        $mov edx, D3D12_HEAP_TYPE_DEFAULT
+        $mov r8d, D3D12_RESOURCE_STATE_COPY_DEST
+        $call create_buffer
         $mov [glob.mesh_vb], rax
+
+        $mov ecx, 1024
+        $call get_upload_buffer
+        $mov [.upload_vb], rax
 
         ; fill vertex buffer
         $vmovaps xmm0, [glob.tri_v0]
@@ -65,6 +63,21 @@ scene1_init:
         $vmovaps [rdx+16], xmm0
         $vmovaps xmm0, [glob.tri_v2]
         $vmovaps [rdx+32], xmm0
+
+        $mov rcx, [glob.cmdlist]
+        $mov rdx, [glob.mesh_vb]
+        $mov r8d, 0
+        $mov r9, [.upload_vb]
+        $mov [.param5], 0
+        $mov [.param6], 1024
+        $comcall ID3D12GraphicsCommandList.CopyBufferRegion
+
+        $transitionBarrier .barrier, [glob.mesh_vb], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+        $mov rcx, [glob.cmdlist]
+        $mov edx, 1
+        $lea r8, [.barrier]
+        $comcall ID3D12GraphicsCommandList.ResourceBarrier
+
 
         ; create vertex buffer view
         $mov rcx, [glob.mesh_vb]
@@ -238,8 +251,7 @@ scene1_update:
 
         ; back buffer to D3D12_RESOURCE_STATE_RENDER_TARGET
         $mov eax, [glob.back_buffer_index]
-        $mov rax, [glob.swapchain_buffers+rax*8]
-        $transitionBarrier .barrier, rax, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
+        $transitionBarrier .barrier, [glob.swapchain_buffers+rax*8], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
         $mov rcx, [glob.cmdlist]
         $mov edx, 1
         $lea r8, [.barrier]
@@ -280,8 +292,7 @@ scene1_update:
 
         ; back buffer to D3D12_RESOURCE_STATE_PRESENT
         $mov eax, [glob.back_buffer_index]
-        $mov rax, [glob.swapchain_buffers+rax*8]
-        $transitionBarrier .barrier, rax, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT
+        $transitionBarrier .barrier, [glob.swapchain_buffers+rax*8], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT
         $mov rcx, [glob.cmdlist]
         $mov edx, 1
         $lea r8, [.barrier]

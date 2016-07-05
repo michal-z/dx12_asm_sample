@@ -156,6 +156,7 @@ demo_init:
         $cmp esi, k_swapchain_buffer_count
         $jb .for_each_swap_buffer
 
+
         ; frame fence
         $mov rcx, [glob.device]
         $mov edx, 0

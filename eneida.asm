@@ -154,7 +154,7 @@ macro $safeRelease iface* {
   .end: }
 
 macro $transitionBarrier ptr*, res*, sbefore*, safter* {
-        $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.pResource], res
+        $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.pResource], rax, res
         $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.StateBefore], sbefore
         $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.StateAfter], safter }
 
@@ -197,6 +197,7 @@ macro $vshufps d*, s0*, s1*, fp3*, fp2, fp1, fp0 {
 k_frame_count equ 3
 k_win_style equ WS_OVERLAPPED+WS_SYSMENU+WS_CAPTION+WS_MINIMIZEBOX
 k_swapchain_buffer_count equ 4
+k_upload_buffers_count equ 16
 ;========================================================================
 section '.data' data readable writeable
 
@@ -217,6 +218,10 @@ glob:
 
   align 8
   .mesh_ib_view D3D12_INDEX_BUFFER_VIEW
+
+  align 8
+  .upload_buffers dq k_upload_buffers_count dup 0
+  .upload_buffers_count dd 0, 0
 
   align 8
   .factory_dxgi dq 0
@@ -290,15 +295,15 @@ get_time.first_perf_counter dq 0
 
 update_frame_stats.prev_time dq 0
 update_frame_stats.prev_update_time dq 0
-update_frame_stats.frame dd 0,0
+update_frame_stats.frame dd 0, 0
 
 align 8
 k_f64_1000000_0 dq 1000000.0
 k_f64_1_0 dq 1.0
 
 align 1
-k_win_class_name db 'eneida',0
-k_win_text_fmt db '[%d fps  %d us] eneida',0
+k_win_class_name db 'eneida', 0
+k_win_text_fmt db '[%d fps  %d us] eneida', 0
 
 IID_IDXGISwapChain3 GUID 0x94d99bdb,0xf1f8,0x4ab0,0xb2,0x36,0x7d,0xa0,0x17,0x0e,0xda,0xb1
 IID_IDXGIFactory4 GUID 0x1bc6ea02,0xef36,0x464f,0xbf,0x0c,0x21,0xca,0x39,0xe5,0x16,0x8a
@@ -346,31 +351,6 @@ include 'eneida_scene1.inc'
 include 'eneida_lib.inc'
 ;=============================================================================
 falign
-wait_for_gpu:
-;-----------------------------------------------------------------------------
-  .k_stack_size = 32*1+24
-        $sub rsp, .k_stack_size
-
-        $add [glob.cpu_completed_fences], 1
-
-        $mov rcx, [glob.cmdqueue]
-        $mov rdx, [glob.frame_fence]
-        $mov r8, [glob.cpu_completed_fences]
-        $comcall ID3D12CommandQueue.Signal
-
-        $mov rcx, [glob.frame_fence]
-        $mov rdx, [glob.cpu_completed_fences]
-        $mov r8, [glob.frame_fence_event]
-        $comcall ID3D12Fence.SetEventOnCompletion
-
-        $mov rcx, [glob.frame_fence_event]
-        $mov edx, INFINITE
-        $icall WaitForSingleObject
-
-        $add rsp, .k_stack_size
-        $ret
-;=============================================================================
-falign
 check_cpu_extensions:
 ;-----------------------------------------------------------------------------
         $mov eax, 1
@@ -393,32 +373,6 @@ check_cpu_extensions:
         $ret
   .not_supported:
         $xor eax, eax
-        $ret
-;=============================================================================
-falign
-get_time:
-;-----------------------------------------------------------------------------
-  .k_stack_size = 32*1+24
-        $sub rsp, .k_stack_size
-        $mov rax, [.perf_freq]
-        $test rax, rax
-        $jnz @f
-
-        $lea rcx, [.perf_freq]
-        $icall QueryPerformanceFrequency
-        $lea rcx, [.first_perf_counter]
-        $icall QueryPerformanceCounter
-
-  @@:   $lea rcx, [.perf_counter]
-        $icall QueryPerformanceCounter
-        $mov rcx, [.perf_counter]
-        $sub rcx, [.first_perf_counter]
-        $mov rdx, [.perf_freq]
-        $vxorps xmm0, xmm0, xmm0
-        $vcvtsi2sd xmm1, xmm0, rcx
-        $vcvtsi2sd xmm2, xmm0, rdx
-        $vdivsd xmm0, xmm1, xmm2
-        $add rsp, .k_stack_size
         $ret
 ;=============================================================================
 falign

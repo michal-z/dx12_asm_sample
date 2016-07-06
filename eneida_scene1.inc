@@ -122,6 +122,8 @@ scene1_init:
         $mov [glob.mesh_ib_view.Format], DXGI_FORMAT_R32_UINT
 
 
+        $call create_texture_from_file
+
 
         ; load VS
         $lea rcx, [glob.sz_vs_object]

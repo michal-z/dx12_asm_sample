@@ -625,7 +625,6 @@ section '.idata' import data readable writeable
 
 dd 0,0,0,rva _kernel32,rva _kernel32_table
 dd 0,0,0,rva _user32,rva _user32_table
-dd 0,0,0,rva _gdi32,rva _gdi32_table
 dd 0,0,0,rva _dxgi,rva _dxgi_table
 dd 0,0,0,rva _d3d12,rva _d3d12_table
 dd 0,0,0,0,0
@@ -653,6 +652,11 @@ _kernel32_table:
   SetEvent dq rva _SetEvent
   WaitForSingleObject dq rva _WaitForSingleObject
   WaitForMultipleObjects dq rva _WaitForMultipleObjects
+  OutputDebugString dq rva _OutputDebugString
+  RtlCopyMemory dq rva _RtlCopyMemory
+  RtlFillMemory dq rva _RtlFillMemory
+  RtlMoveMemory dq rva _RtlMoveMemory
+  RtlZeroMemory dq rva _RtlZeroMemory
   dq 0
 
 _user32_table:
@@ -669,13 +673,6 @@ _user32_table:
   ReleaseDC dq rva _ReleaseDC
   PostQuitMessage dq rva _PostQuitMessage
   MessageBox dq rva _MessageBox
-  dq 0
-
-_gdi32_table:
-  DeleteDC dq rva _DeleteDC
-  SetPixelFormat dq rva _SetPixelFormat
-  ChoosePixelFormat dq rva _ChoosePixelFormat
-  SwapBuffers dq rva _SwapBuffers
   dq 0
 
 _dxgi_table:
@@ -715,6 +712,11 @@ emit <_CreateThread dw 0>,<db 'CreateThread',0>
 emit <_SetEvent dw 0>,<db 'SetEvent',0>
 emit <_WaitForSingleObject dw 0>,<db 'WaitForSingleObject',0>
 emit <_WaitForMultipleObjects dw 0>,<db 'WaitForMultipleObjects',0>
+emit <_OutputDebugString dw 0>,<db 'OutputDebugStringA',0>
+emit <_RtlCopyMemory dw 0>,<db 'RtlCopyMemory',0>
+emit <_RtlFillMemory dw 0>,<db 'RtlFillMemory',0>
+emit <_RtlMoveMemory dw 0>,<db 'RtlMoveMemory',0>
+emit <_RtlZeroMemory dw 0>,<db 'RtlZeroMemory',0>
 
 emit <_wsprintf dw 0>,<db 'wsprintfA',0>
 emit <_RegisterClass dw 0>,<db 'RegisterClassA',0>
@@ -729,11 +731,6 @@ emit <_GetDC dw 0>,<db 'GetDC',0>
 emit <_ReleaseDC dw 0>,<db 'ReleaseDC',0>
 emit <_PostQuitMessage dw 0>,<db 'PostQuitMessage',0>
 emit <_MessageBox dw 0>,<db 'MessageBoxA',0>
-
-emit <_DeleteDC dw 0>,<db 'DeleteDC',0>
-emit <_SetPixelFormat dw 0>,<db 'SetPixelFormat',0>
-emit <_ChoosePixelFormat dw 0>,<db 'ChoosePixelFormat',0>
-emit <_SwapBuffers dw 0>,<db 'SwapBuffers',0>
 
 emit <_CreateDXGIFactory1 dw 0>,<db 'CreateDXGIFactory1',0>
 

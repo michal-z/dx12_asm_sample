@@ -565,14 +565,190 @@ D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT = 1
 
 struc D3D12_TEXTURE_COPY_LOCATION {
   .pResource dq ?
-  .Type dd ?
+  .Type dd ?,?
   .PlacedFootprint D3D12_PLACED_SUBRESOURCE_FOOTPRINT
 
   virtual at .PlacedFootprint
   .SubresourceIndex dd ?
+  end virtual }
+
+D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_0 = 0
+D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_1 = 1
+D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_2 = 2
+D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_3 = 3
+D3D12_SHADER_COMPONENT_MAPPING_FORCE_VALUE_0 = 4
+D3D12_SHADER_COMPONENT_MAPPING_FORCE_VALUE_1 = 5
+
+D3D12_SHADER_COMPONENT_MAPPING_MASK = 0x7
+D3D12_SHADER_COMPONENT_MAPPING_SHIFT = 3
+D3D12_SHADER_COMPONENT_MAPPING_ALWAYS_SET_BIT_AVOIDING_ZEROMEM_MISTAKES = (1 shl (D3D12_SHADER_COMPONENT_MAPPING_SHIFT*4))
+
+macro $d3d12EncodeShader4ComponentMapping dest*, Src0*, Src1*, Src2*, Src3* {
+        $mov dest, (((Src0 and D3D12_SHADER_COMPONENT_MAPPING_MASK)) or \
+                    ((Src1 and D3D12_SHADER_COMPONENT_MAPPING_MASK) shl D3D12_SHADER_COMPONENT_MAPPING_SHIFT) or \
+                    ((Src2 and D3D12_SHADER_COMPONENT_MAPPING_MASK) shl (D3D12_SHADER_COMPONENT_MAPPING_SHIFT*2)) or \
+                    ((Src3 and D3D12_SHADER_COMPONENT_MAPPING_MASK) shl (D3D12_SHADER_COMPONENT_MAPPING_SHIFT*3)) or \
+                    D3D12_SHADER_COMPONENT_MAPPING_ALWAYS_SET_BIT_AVOIDING_ZEROMEM_MISTAKES) }
+
+
+D3D12_BUFFER_SRV_FLAG_NONE = 0
+D3D12_BUFFER_SRV_FLAG_RAW = 0x1
+
+struc D3D12_BUFFER_SRV {
+  .FirstElement dq ?
+  .NumElements dd ?
+  .StructureByteStride dd ?
+  .Flags dd ?,? }
+
+struc D3D12_TEX1D_SRV {
+  .MostDetailedMip dd ?
+  .MipLevels dd ?
+  .ResourceMinLODClamp dd ? }
+
+struc D3D12_TEX1D_ARRAY_SRV {
+  .MostDetailedMip dd ?
+  .MipLevels dd ?
+  .FirstArraySlice dd ?
+  .ArraySize dd ?
+  .ResourceMinLODClamp dd ? }
+
+struc D3D12_TEX2D_SRV {
+  .MostDetailedMip dd ?
+  .MipLevels dd ?
+  .PlaneSlice dd ?
+  .ResourceMinLODClamp dd ? }
+
+struc D3D12_TEX2D_ARRAY_SRV {
+  .MostDetailedMip dd ?
+  .MipLevels dd ?
+  .FirstArraySlice dd ?
+  .ArraySize dd ?
+  .PlaneSlice dd ?
+  .ResourceMinLODClamp dd ? }
+
+struc D3D12_TEX3D_SRV {
+  .MostDetailedMip dd ?
+  .MipLevels dd ?
+  .ResourceMinLODClamp dd ? }
+
+struc D3D12_TEXCUBE_SRV {
+  .MostDetailedMip dd ?
+  .MipLevels dd ?
+  .ResourceMinLODClamp dd ? }
+
+struc D3D12_TEXCUBE_ARRAY_SRV {
+  .MostDetailedMip dd ?
+  .MipLevels dd ?
+  .First2DArrayFace dd ?
+  .NumCubes dd ?
+  .ResourceMinLODClamp dd ? }
+
+struc D3D12_TEX2DMS_SRV {
+  .UnusedField_NothingToDefine dd ? }
+
+struc D3D12_TEX2DMS_ARRAY_SRV {
+  .FirstArraySlice dd ?
+  .ArraySize dd ? }
+
+D3D12_SRV_DIMENSION_UNKNOWN = 0
+D3D12_SRV_DIMENSION_BUFFER = 1
+D3D12_SRV_DIMENSION_TEXTURE1D = 2
+D3D12_SRV_DIMENSION_TEXTURE1DARRAY = 3
+D3D12_SRV_DIMENSION_TEXTURE2D = 4
+D3D12_SRV_DIMENSION_TEXTURE2DARRAY = 5
+D3D12_SRV_DIMENSION_TEXTURE2DMS = 6
+D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY = 7
+D3D12_SRV_DIMENSION_TEXTURE3D = 8
+D3D12_SRV_DIMENSION_TEXTURECUBE = 9
+D3D12_SRV_DIMENSION_TEXTURECUBEARRAY = 10
+
+struc D3D12_SHADER_RESOURCE_VIEW_DESC {
+  .Format dd ?
+  .ViewDimension dd ?
+  .Shader4ComponentMapping dd ?
+  dd ?
+  .Buffer D3D12_BUFFER_SRV
+
+  virtual at .Buffer
+  .Texture1D D3D12_TEX1D_SRV
   end virtual
 
+  virtual at .Buffer
+  .Texture1DArray D3D12_TEX1D_ARRAY_SRV
+  end virtual
+
+  virtual at .Buffer
+  .Texture2D D3D12_TEX2D_SRV
+  end virtual
+
+  virtual at .Buffer
+  .Texture2DArray D3D12_TEX2D_ARRAY_SRV
+  end virtual
+
+  virtual at .Buffer
+  .Texture2DMS D3D12_TEX2DMS_SRV
+  end virtual
+
+  virtual at .Buffer
+  .Texture2DMSArray D3D12_TEX2DMS_ARRAY_SRV
+  end virtual
+
+  virtual at .Buffer
+  .Texture3D D3D12_TEX3D_SRV
+  end virtual
+
+  virtual at .Buffer
+  .TextureCube D3D12_TEXCUBE_SRV
+  end virtual
+
+  virtual at .Buffer
+  .TextureCubeArray D3D12_TEXCUBE_ARRAY_SRV
+  end virtual }
+
+struc D3D12_CONSTANT_BUFFER_VIEW_DESC {
+  .BufferLocation dq ?
+  .SizeInBytes dd ?
   dd ? }
+
+D3D12_FILTER_MIN_MAG_MIP_POINT = 0
+D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR = 0x1
+D3D12_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT = 0x4
+D3D12_FILTER_MIN_POINT_MAG_MIP_LINEAR = 0x5
+D3D12_FILTER_MIN_LINEAR_MAG_MIP_POINT = 0x10
+D3D12_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR = 0x11
+D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT = 0x14
+D3D12_FILTER_MIN_MAG_MIP_LINEAR = 0x15
+D3D12_FILTER_ANISOTROPIC = 0x55
+D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT = 0x80
+D3D12_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR = 0x81
+D3D12_FILTER_COMPARISON_MIN_POINT_MAG_LINEAR_MIP_POINT = 0x84
+D3D12_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR = 0x85
+D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_MIP_POINT = 0x90
+D3D12_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR = 0x91
+D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT = 0x94
+D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR = 0x95
+D3D12_FILTER_COMPARISON_ANISOTROPIC = 0xd5
+D3D12_FILTER_MINIMUM_MIN_MAG_MIP_POINT = 0x100
+D3D12_FILTER_MINIMUM_MIN_MAG_POINT_MIP_LINEAR = 0x101
+D3D12_FILTER_MINIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT = 0x104
+D3D12_FILTER_MINIMUM_MIN_POINT_MAG_MIP_LINEAR = 0x105
+D3D12_FILTER_MINIMUM_MIN_LINEAR_MAG_MIP_POINT = 0x110
+D3D12_FILTER_MINIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR = 0x111
+D3D12_FILTER_MINIMUM_MIN_MAG_LINEAR_MIP_POINT = 0x114
+D3D12_FILTER_MINIMUM_MIN_MAG_MIP_LINEAR = 0x115
+D3D12_FILTER_MINIMUM_ANISOTROPIC = 0x155
+D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_POINT = 0x180
+D3D12_FILTER_MAXIMUM_MIN_MAG_POINT_MIP_LINEAR = 0x181
+D3D12_FILTER_MAXIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT = 0x184
+D3D12_FILTER_MAXIMUM_MIN_POINT_MAG_MIP_LINEAR = 0x185
+D3D12_FILTER_MAXIMUM_MIN_LINEAR_MAG_MIP_POINT = 0x190
+D3D12_FILTER_MAXIMUM_MIN_LINEAR_MAG_POINT_MIP_LINEAR = 0x191
+D3D12_FILTER_MAXIMUM_MIN_MAG_LINEAR_MIP_POINT = 0x194
+D3D12_FILTER_MAXIMUM_MIN_MAG_MIP_LINEAR = 0x195
+D3D12_FILTER_MAXIMUM_ANISOTROPIC = 0x1d5
+
+D3D12_FILTER_TYPE_POINT = 0
+D3D12_FILTER_TYPE_LINEAR = 1
 
 virtual at 0
 ID3D12Device:
@@ -623,196 +799,196 @@ ID3D12Device:
 end virtual
 
 virtual at 0
-  ID3D12CommandQueue:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetPrivateData rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .SetName rq 1
-    .GetDevice rq 1
-    .UpdateTileMappings rq 1
-    .CopyTileMappings rq 1
-    .ExecuteCommandLists rq 1
-    .SetMarker rq 1
-    .BeginEvent rq 1
-    .EndEvent rq 1
-    .Signal rq 1
-    .Wait rq 1
-    .GetTimestampFrequency rq 1
-    .GetClockCalibration rq 1
-    .GetDesc rq 1
+ID3D12CommandQueue:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetPrivateData rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .SetName rq 1
+  .GetDevice rq 1
+  .UpdateTileMappings rq 1
+  .CopyTileMappings rq 1
+  .ExecuteCommandLists rq 1
+  .SetMarker rq 1
+  .BeginEvent rq 1
+  .EndEvent rq 1
+  .Signal rq 1
+  .Wait rq 1
+  .GetTimestampFrequency rq 1
+  .GetClockCalibration rq 1
+  .GetDesc rq 1
 end virtual
 
 virtual at 0
-  ID3D12CommandAllocator:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetPrivateData rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .SetName rq 1
-    .GetDevice rq 1
-    .Reset rq 1
+ID3D12CommandAllocator:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetPrivateData rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .SetName rq 1
+  .GetDevice rq 1
+  .Reset rq 1
 end virtual
 
 virtual at 0
-  ID3D12DescriptorHeap:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetPrivateData rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .SetName rq 1
-    .GetDevice rq 1
-    .GetDesc rq 1
-    .GetCPUDescriptorHandleForHeapStart rq 1
-    .GetGPUDescriptorHandleForHeapStart rq 1
+ID3D12DescriptorHeap:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetPrivateData rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .SetName rq 1
+  .GetDevice rq 1
+  .GetDesc rq 1
+  .GetCPUDescriptorHandleForHeapStart rq 1
+  .GetGPUDescriptorHandleForHeapStart rq 1
 end virtual
 
 virtual at 0
-  ID3D12CommandList:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetPrivateData rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .SetName rq 1
-    .GetDevice rq 1
-    .GetType rq 1
+ID3D12CommandList:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetPrivateData rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .SetName rq 1
+  .GetDevice rq 1
+  .GetType rq 1
 end virtual
 
 virtual at 0
-  ID3D12GraphicsCommandList:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetPrivateData rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .SetName rq 1
-    .GetDevice rq 1
-    .GetType rq 1
-    .Close rq 1
-    .Reset rq 1
-    .ClearState rq 1
-    .DrawInstanced rq 1
-    .DrawIndexedInstanced rq 1
-    .Dispatch rq 1
-    .CopyBufferRegion rq 1
-    .CopyTextureRegion rq 1
-    .CopyResource rq 1
-    .CopyTiles rq 1
-    .ResolveSubresource rq 1
-    .IASetPrimitiveTopology rq 1
-    .RSSetViewports rq 1
-    .RSSetScissorRects rq 1
-    .OMSetBlendFactor rq 1
-    .OMSetStencilRef rq 1
-    .SetPipelineState rq 1
-    .ResourceBarrier rq 1
-    .ExecuteBundle rq 1
-    .SetDescriptorHeaps rq 1
-    .SetComputeRootSignature rq 1
-    .SetGraphicsRootSignature rq 1
-    .SetComputeRootDescriptorTable rq 1
-    .SetGraphicsRootDescriptorTable rq 1
-    .SetComputeRoot32BitConstant rq 1
-    .SetGraphicsRoot32BitConstant rq 1
-    .SetComputeRoot32BitConstants rq 1
-    .SetGraphicsRoot32BitConstants rq 1
-    .SetComputeRootConstantBufferView rq 1
-    .SetGraphicsRootConstantBufferView rq 1
-    .SetComputeRootShaderResourceView rq 1
-    .SetGraphicsRootShaderResourceView rq 1
-    .SetComputeRootUnorderedAccessView rq 1
-    .SetGraphicsRootUnorderedAccessView rq 1
-    .IASetIndexBuffer rq 1
-    .IASetVertexBuffers rq 1
-    .SOSetTargets rq 1
-    .OMSetRenderTargets rq 1
-    .ClearDepthStencilView rq 1
-    .ClearRenderTargetView rq 1
-    .ClearUnorderedAccessViewUint rq 1
-    .ClearUnorderedAccessViewFloat rq 1
-    .DiscardResource rq 1
-    .BeginQuery rq 1
-    .EndQuery rq 1
-    .ResolveQueryData rq 1
-    .SetPredication rq 1
-    .SetMarker rq 1
-    .BeginEvent rq 1
-    .EndEvent rq 1
-    .ExecuteIndirect rq 1
+ID3D12GraphicsCommandList:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetPrivateData rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .SetName rq 1
+  .GetDevice rq 1
+  .GetType rq 1
+  .Close rq 1
+  .Reset rq 1
+  .ClearState rq 1
+  .DrawInstanced rq 1
+  .DrawIndexedInstanced rq 1
+  .Dispatch rq 1
+  .CopyBufferRegion rq 1
+  .CopyTextureRegion rq 1
+  .CopyResource rq 1
+  .CopyTiles rq 1
+  .ResolveSubresource rq 1
+  .IASetPrimitiveTopology rq 1
+  .RSSetViewports rq 1
+  .RSSetScissorRects rq 1
+  .OMSetBlendFactor rq 1
+  .OMSetStencilRef rq 1
+  .SetPipelineState rq 1
+  .ResourceBarrier rq 1
+  .ExecuteBundle rq 1
+  .SetDescriptorHeaps rq 1
+  .SetComputeRootSignature rq 1
+  .SetGraphicsRootSignature rq 1
+  .SetComputeRootDescriptorTable rq 1
+  .SetGraphicsRootDescriptorTable rq 1
+  .SetComputeRoot32BitConstant rq 1
+  .SetGraphicsRoot32BitConstant rq 1
+  .SetComputeRoot32BitConstants rq 1
+  .SetGraphicsRoot32BitConstants rq 1
+  .SetComputeRootConstantBufferView rq 1
+  .SetGraphicsRootConstantBufferView rq 1
+  .SetComputeRootShaderResourceView rq 1
+  .SetGraphicsRootShaderResourceView rq 1
+  .SetComputeRootUnorderedAccessView rq 1
+  .SetGraphicsRootUnorderedAccessView rq 1
+  .IASetIndexBuffer rq 1
+  .IASetVertexBuffers rq 1
+  .SOSetTargets rq 1
+  .OMSetRenderTargets rq 1
+  .ClearDepthStencilView rq 1
+  .ClearRenderTargetView rq 1
+  .ClearUnorderedAccessViewUint rq 1
+  .ClearUnorderedAccessViewFloat rq 1
+  .DiscardResource rq 1
+  .BeginQuery rq 1
+  .EndQuery rq 1
+  .ResolveQueryData rq 1
+  .SetPredication rq 1
+  .SetMarker rq 1
+  .BeginEvent rq 1
+  .EndEvent rq 1
+  .ExecuteIndirect rq 1
 end virtual
 
 virtual at 0
-  ID3D12Fence:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetPrivateData rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .SetName rq 1
-    .GetDevice rq 1
-    .GetCompletedValue rq 1
-    .SetEventOnCompletion rq 1
-    .Signal rq 1
+ID3D12Fence:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetPrivateData rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .SetName rq 1
+  .GetDevice rq 1
+  .GetCompletedValue rq 1
+  .SetEventOnCompletion rq 1
+  .Signal rq 1
 end virtual
 
 virtual at 0
-  ID3D12Resource:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetPrivateData rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .SetName rq 1
-    .GetDevice rq 1
-    .Map rq 1
-    .Unmap rq 1
-    .GetDesc rq 1
-    .GetGPUVirtualAddress rq 1
-    .WriteToSubresource rq 1
-    .ReadFromSubresource rq 1
-    .GetHeapProperties rq 1
+ID3D12Resource:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetPrivateData rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .SetName rq 1
+  .GetDevice rq 1
+  .Map rq 1
+  .Unmap rq 1
+  .GetDesc rq 1
+  .GetGPUVirtualAddress rq 1
+  .WriteToSubresource rq 1
+  .ReadFromSubresource rq 1
+  .GetHeapProperties rq 1
 end virtual
 
 virtual at 0
-  ID3DBlob:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetBufferPointer rq 1
-    .GetBufferSize rq 1
+ID3DBlob:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetBufferPointer rq 1
+  .GetBufferSize rq 1
 end virtual
 
 virtual at 0
-  ID3D12RootSignature:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .GetPrivateData rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .SetName rq 1
-    .GetDevice rq 1
+ID3D12RootSignature:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .GetPrivateData rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .SetName rq 1
+  .GetDevice rq 1
 end virtual
 
 ; D3D12 debug layer
 
 virtual at 0
-  ID3D12Debug:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .EnableDebugLayer rq 1
+ID3D12Debug:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .EnableDebugLayer rq 1
 end virtual
 
 ; DXGI
@@ -945,77 +1121,77 @@ DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL = 3
 DXGI_SWAP_EFFECT_FLIP_DISCARD = 4
 
 virtual at 0
-  IDXGIFactory4:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .GetPrivateData rq 1
-    .GetParent rq 1
-    .EnumAdapters rq 1
-    .MakeWindowAssociation rq 1
-    .GetWindowAssociation rq 1
-    .CreateSwapChain rq 1
-    .CreateSoftwareAdapter rq 1
-    .EnumAdapters1 rq 1
-    .IsCurrent rq 1
-    .IsWindowedStereoEnabled rq 1
-    .CreateSwapChainForHwnd rq 1
-    .CreateSwapChainForCoreWindow rq 1
-    .GetSharedResourceAdapterLuid rq 1
-    .RegisterStereoStatusWindow rq 1
-    .RegisterStereoStatusEvent rq 1
-    .UnregisterStereoStatus rq 1
-    .RegisterOcclusionStatusWindow rq 1
-    .RegisterOcclusionStatusEvent rq 1
-    .UnregisterOcclusionStatus rq 1
-    .CreateSwapChainForComposition rq 1
-    .GetCreationFlags rq 1
-    .EnumAdapterByLuid rq 1
-    .EnumWarpAdapter rq 1
+IDXGIFactory4:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .GetPrivateData rq 1
+  .GetParent rq 1
+  .EnumAdapters rq 1
+  .MakeWindowAssociation rq 1
+  .GetWindowAssociation rq 1
+  .CreateSwapChain rq 1
+  .CreateSoftwareAdapter rq 1
+  .EnumAdapters1 rq 1
+  .IsCurrent rq 1
+  .IsWindowedStereoEnabled rq 1
+  .CreateSwapChainForHwnd rq 1
+  .CreateSwapChainForCoreWindow rq 1
+  .GetSharedResourceAdapterLuid rq 1
+  .RegisterStereoStatusWindow rq 1
+  .RegisterStereoStatusEvent rq 1
+  .UnregisterStereoStatus rq 1
+  .RegisterOcclusionStatusWindow rq 1
+  .RegisterOcclusionStatusEvent rq 1
+  .UnregisterOcclusionStatus rq 1
+  .CreateSwapChainForComposition rq 1
+  .GetCreationFlags rq 1
+  .EnumAdapterByLuid rq 1
+  .EnumWarpAdapter rq 1
 end virtual
 
 virtual at 0
-  IDXGISwapChain3:
-    .QueryInterface rq 1
-    .AddRef rq 1
-    .Release rq 1
-    .SetPrivateData rq 1
-    .SetPrivateDataInterface rq 1
-    .GetPrivateData rq 1
-    .GetParent rq 1
-    .GetDevice rq 1
-    .Present rq 1
-    .GetBuffer rq 1
-    .SetFullscreenState rq 1
-    .GetFullscreenState rq 1
-    .GetDesc rq 1
-    .ResizeBuffers rq 1
-    .ResizeTarget rq 1
-    .GetContainingOutput rq 1
-    .GetFrameStatistics rq 1
-    .GetLastPresentCount rq 1
-    .GetDesc1 rq 1
-    .GetFullscreenDesc rq 1
-    .GetHwnd rq 1
-    .GetCoreWindow rq 1
-    .Present1 rq 1
-    .IsTemporaryMonoSupported rq 1
-    .GetRestrictToOutput rq 1
-    .SetBackgroundColor rq 1
-    .GetBackgroundColor rq 1
-    .SetRotation rq 1
-    .GetRotation rq 1
-    .SetSourceSize rq 1
-    .GetSourceSize rq 1
-    .SetMaximumFrameLatency rq 1
-    .GetMaximumFrameLatency rq 1
-    .GetFrameLatencyWaitableObject rq 1
-    .SetMatrixTransform rq 1
-    .GetMatrixTransform rq 1
-    .GetCurrentBackBufferIndex rq 1
-    .CheckColorSpaceSupport rq 1
-    .SetColorSpace1 rq 1
-    .ResizeBuffers1 rq 1
+IDXGISwapChain3:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+  .SetPrivateData rq 1
+  .SetPrivateDataInterface rq 1
+  .GetPrivateData rq 1
+  .GetParent rq 1
+  .GetDevice rq 1
+  .Present rq 1
+  .GetBuffer rq 1
+  .SetFullscreenState rq 1
+  .GetFullscreenState rq 1
+  .GetDesc rq 1
+  .ResizeBuffers rq 1
+  .ResizeTarget rq 1
+  .GetContainingOutput rq 1
+  .GetFrameStatistics rq 1
+  .GetLastPresentCount rq 1
+  .GetDesc1 rq 1
+  .GetFullscreenDesc rq 1
+  .GetHwnd rq 1
+  .GetCoreWindow rq 1
+  .Present1 rq 1
+  .IsTemporaryMonoSupported rq 1
+  .GetRestrictToOutput rq 1
+  .SetBackgroundColor rq 1
+  .GetBackgroundColor rq 1
+  .SetRotation rq 1
+  .GetRotation rq 1
+  .SetSourceSize rq 1
+  .GetSourceSize rq 1
+  .SetMaximumFrameLatency rq 1
+  .GetMaximumFrameLatency rq 1
+  .GetFrameLatencyWaitableObject rq 1
+  .SetMatrixTransform rq 1
+  .GetMatrixTransform rq 1
+  .GetCurrentBackBufferIndex rq 1
+  .CheckColorSpaceSupport rq 1
+  .SetColorSpace1 rq 1
+  .ResizeBuffers1 rq 1
 end virtual

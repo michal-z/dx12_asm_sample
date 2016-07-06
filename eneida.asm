@@ -197,7 +197,6 @@ macro $vshufps d*, s0*, s1*, fp3*, fp2, fp1, fp0 {
 k_frame_count equ 3
 k_win_style equ WS_OVERLAPPED+WS_SYSMENU+WS_CAPTION+WS_MINIMIZEBOX
 k_swapchain_buffer_count equ 4
-k_upload_buffers_count equ 16
 ;========================================================================
 section '.data' data readable writeable
 
@@ -205,7 +204,10 @@ struc frame_resources {
   .constant_buffer dq 0
   .constant_buffer_addr dq 0
   .constant_buffer_view dq 0
-  .cmdalloc dq ? }
+  .cmdalloc dq 0
+  .descriptor_heap dq 0
+  .descriptor_heap_cpu_start dq 0
+  .descriptor_heap_gpu_start dq 0 }
 struc_offsets_size frame_resources
 
 align 8
@@ -220,6 +222,7 @@ glob:
   .mesh_ib_view D3D12_INDEX_BUFFER_VIEW
 
   align 8
+  k_upload_buffers_count equ 16
   .upload_buffers dq k_upload_buffers_count dup 0
   .upload_buffers_count dd 0, 0
 
@@ -230,9 +233,12 @@ glob:
   .cmdlist dq 0
 
   .swapchain dq 0
-  .swapchain_heap dq 0
-  .swapchain_heap_start dq 0
   .swapchain_buffers dq k_swapchain_buffer_count dup 0
+
+  .rtv_heap dq 0
+  .rtv_heap_start dq 0
+  .cbv_srv_uav_heap dq 0
+  .cbv_srv_uav_heap_start dq 0
 
   .frame_fence dq 0
   .frame_fence_event dq 0

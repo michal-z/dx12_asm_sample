@@ -125,14 +125,14 @@ demo_init:
         $mov rcx, [glob.device]
         $lea rdx, [.swapchain_heap_desc]
         $lea r8, [IID_ID3D12DescriptorHeap]
-        $lea r9, [glob.swapchain_heap]
+        $lea r9, [glob.rtv_heap]
         $comcall ID3D12Device.CreateDescriptorHeap
         $checkhr eax, .error
 
-        $mov rcx, [glob.swapchain_heap]
-        $lea rdx, [glob.swapchain_heap_start]
+        $mov rcx, [glob.rtv_heap]
+        $lea rdx, [glob.rtv_heap_start]
         $comcall ID3D12DescriptorHeap.GetCPUDescriptorHandleForHeapStart
-        $mov [glob.swapchain_heap_start], rax, [rax]
+        $mov [glob.rtv_heap_start], rax, [rax]
 
         ; swapchain buffer descriptors
         $xor esi, esi
@@ -149,7 +149,7 @@ demo_init:
         $xor r8d, r8d
         $mov r9d, esi
         $imul r9d, [glob.rtv_size]
-        $add r9, [glob.swapchain_heap_start]
+        $add r9, [glob.rtv_heap_start]
         $comcall ID3D12Device.CreateRenderTargetView
 
         $add esi, 1
@@ -222,7 +222,7 @@ demo_deinit:
 
         $safeRelease [glob.cmdlist]
         $safeRelease [glob.frame_fence]
-        $safeRelease [glob.swapchain_heap]
+        $safeRelease [glob.rtv_heap]
         $safeRelease [glob.swapchain]
 
   @@:   $add rsp, .k_stack_size

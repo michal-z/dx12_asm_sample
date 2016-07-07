@@ -170,11 +170,12 @@ scene1_init:
 
 
         ; create texture
+        $lea rcx, [sz_img_gradient]
         $call create_texture_from_file
         $mov [glob.texture], rax
 
         $d3d12EncodeShader4ComponentMapping [.srv_desc.Shader4ComponentMapping], 0, 1, 2, 3
-        $mov [.srv_desc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
+        $mov [.srv_desc.Format], DXGI_FORMAT_B8G8R8A8_UNORM
         $mov [.srv_desc.ViewDimension], D3D12_SRV_DIMENSION_TEXTURE2D
         $mov [.srv_desc.Texture2D.MipLevels], -1
 

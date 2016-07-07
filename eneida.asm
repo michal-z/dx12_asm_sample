@@ -300,6 +300,7 @@ sz_position db 'POSITION', 0
 sz_texcoord db 'TEXCOORD', 0
 sz_vs_object db 'data/shader/object_vs.cso', 0
 sz_ps_object db 'data/shader/object_ps.cso', 0
+sz_img_gradient db 'data/image/gradient.tga', 0
 
 align 8
 get_time.perf_counter dq 0

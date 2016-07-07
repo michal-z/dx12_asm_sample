@@ -278,31 +278,11 @@ create_texture_from_file:
         $mov [.barrier.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 
         ; TODO: load image instead of this
-        $malloc 4 * 4 * 4
+        $call load_file
+        $add rax, 18
         $mov [.image_addr], rax
-        $mov [.image_width], 4
-        $mov [.image_height], 4
-
-        $lea rcx, [.image_addr]
-        $mov edx, 4 * 4
-        $mov r8d, 64
-        $icall RtlFillMemory
-
-        $lea rcx, [.image_addr+16]
-        $mov edx, 4 * 4
-        $mov r8d, 128
-        $icall RtlFillMemory
-
-        $lea rcx, [.image_addr+32]
-        $mov edx, 4 * 4
-        $mov r8d, 192
-        $icall RtlFillMemory
-
-        $lea rcx, [.image_addr+48]
-        $mov edx, 4 * 4
-        $mov r8d, 255
-        $icall RtlFillMemory
-
+        $mov [.image_width], 16
+        $mov [.image_height], 16
 
 
         $mov [.upload_heap_props.Type], D3D12_HEAP_TYPE_DEFAULT
@@ -311,7 +291,7 @@ create_texture_from_file:
         $mov [.texture_desc.Height], eax, [.image_height]
         $mov [.texture_desc.DepthOrArraySize], 1
         $mov [.texture_desc.MipLevels], 0
-        $mov [.texture_desc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
+        $mov [.texture_desc.Format], DXGI_FORMAT_B8G8R8A8_UNORM
         $mov [.texture_desc.SampleDesc.Count], 1
         $mov [.texture_desc.Layout], D3D12_TEXTURE_LAYOUT_UNKNOWN
 
@@ -332,7 +312,7 @@ create_texture_from_file:
         $call get_upload_buffer
         $mov [.upload_buffer], rax
 
-        $lea rsi, [.image_addr]
+        $mov rsi, [.image_addr]
         $mov rdi, rdx                   ; upload buffer addr
         $mov ebx, [.row_count]
   .copy_loop:

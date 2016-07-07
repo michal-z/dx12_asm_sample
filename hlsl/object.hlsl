@@ -1,6 +1,20 @@
 #define rs \
     "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
-    "CBV(b0, visibility = SHADER_VISIBILITY_VERTEX)"
+    "CBV(b0, visibility = SHADER_VISIBILITY_VERTEX), " \
+    "DescriptorTable(SRV(t0), visibility = SHADER_VISIBILITY_PIXEL), " \
+    "StaticSampler(s0, filter = FILTER_MIN_MAG_MIP_POINT, visibility = SHADER_VISIBILITY_PIXEL)"
+
+struct vs_in
+{
+  float2 position : POSITION;
+  float2 texcoord : TEXCOORD;
+};
+
+struct vs_out
+{
+  float4 position : SV_Position;
+  float2 texcoord : TEXCOORD;
+};
 
 struct transform_t
 {
@@ -8,18 +22,26 @@ struct transform_t
 };
 ConstantBuffer<transform_t> g_transform : register(b0);
 
+
 // VS
 [RootSignature(rs)]
-float4 object_vs(float4 position : POSITION) : SV_Position
+vs_out object_vs(vs_in i)
 {
-  return mul(float4(position.xyz, 1.0f), g_transform.mat);
+  vs_out o;
+  o.position = mul(float4(i.position, 0.0f, 1.0f), g_transform.mat);
+  o.texcoord = i.texcoord;
+  return o;
 }
 
+
 // PS
+Texture2D<float4> g_texture : register(t0);
+SamplerState g_sampler : register(s0);
+
 [RootSignature(rs)]
-float4 object_ps(float4 position : SV_Position) : SV_Target0
+float4 object_ps(vs_out i) : SV_Target0
 {
-  return float4(1.0f, 0.9f, 0.0f, 1.0f);
+  return g_texture.Sample(g_sampler, i.texcoord);
 }
 
 

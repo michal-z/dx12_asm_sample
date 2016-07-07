@@ -9,11 +9,13 @@ scene1_init:
   dalign 8
   .pso_desc D3D12_GRAPHICS_PIPELINE_STATE_DESC
   dalign 8
-  .input_element_desc D3D12_INPUT_ELEMENT_DESC
+  rept 2 n:0 { .input_element_desc#n D3D12_INPUT_ELEMENT_DESC }
   dalign 8
   rept 2 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
   dalign 8
   .descriptor_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
+  dalign 8
+  .srv_desc D3D12_SHADER_RESOURCE_VIEW_DESC
   dalign 32
   .k_stack_size = $-$$+8
   end virtual
@@ -46,6 +48,7 @@ scene1_init:
         $mov rcx, [.frame_res.constant_buffer]
         $comcall ID3D12Resource.GetGPUVirtualAddress
         $mov [.frame_res.constant_buffer_view], rax
+
 
         ; create descriptor heap
         $mov rcx, [glob.device]
@@ -166,7 +169,21 @@ scene1_init:
         $mov [glob.mesh_ib_view.Format], DXGI_FORMAT_R32_UINT
 
 
+        ; create texture
         $call create_texture_from_file
+        $mov [glob.texture], rax
+
+        $d3d12EncodeShader4ComponentMapping [.srv_desc.Shader4ComponentMapping], 0, 1, 2, 3
+        $mov [.srv_desc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
+        $mov [.srv_desc.ViewDimension], D3D12_SRV_DIMENSION_TEXTURE2D
+        $mov [.srv_desc.Texture2D.MipLevels], -1
+
+        $mov rcx, [glob.device]
+        $mov rdx, [glob.texture]
+        $lea r8, [.srv_desc]
+        $mov r9, [glob.cbv_srv_uav_heap_start]
+        $comcall ID3D12Device.CreateShaderResourceView
+
 
 
         ; load VS
@@ -181,14 +198,22 @@ scene1_init:
         $mov [.pso_desc.PS.pShaderBytecode], rax
         $mov [.pso_desc.PS.BytecodeLength], rdx
 
-        $lea [.input_element_desc.SemanticName], rax, [glob.sz_position]
-        $mov [.input_element_desc.SemanticIndex], 0
-        $mov [.input_element_desc.Format], DXGI_FORMAT_R32G32B32A32_FLOAT
-        $mov [.input_element_desc.InputSlot], 0
-        $mov [.input_element_desc.AlignedByteOffset], 0
 
-        $lea [.pso_desc.InputLayout.pInputElementDescs], rax, [.input_element_desc]
-        $mov [.pso_desc.InputLayout.NumElements], 1
+        $lea [.input_element_desc0.SemanticName], rax, [glob.sz_position]
+        $mov [.input_element_desc0.SemanticIndex], 0
+        $mov [.input_element_desc0.Format], DXGI_FORMAT_R32G32_FLOAT
+        $mov [.input_element_desc0.InputSlot], 0
+        $mov [.input_element_desc0.AlignedByteOffset], 0
+
+        $lea [.input_element_desc1.SemanticName], rax, [glob.sz_texcoord]
+        $mov [.input_element_desc1.SemanticIndex], 0
+        $mov [.input_element_desc1.Format], DXGI_FORMAT_R32G32_FLOAT
+        $mov [.input_element_desc1.InputSlot], 0
+        $mov [.input_element_desc1.AlignedByteOffset], 8
+
+
+        $lea [.pso_desc.InputLayout.pInputElementDescs], rax, [.input_element_desc0]
+        $mov [.pso_desc.InputLayout.NumElements], 2
         $mov [.pso_desc.BlendState.RenderTarget0.RenderTargetWriteMask], $0f
         $mov [.pso_desc.SampleMask], $ffffffff
         $mov [.pso_desc.RasterizerState.CullMode], D3D12_CULL_MODE_NONE
@@ -299,6 +324,14 @@ scene1_update:
 
 
 
+        $mov rcx, [glob.device]
+        $mov edx, 1
+        $mov r8, [.frame_res.descriptor_heap_cpu_start]
+        $mov r9, [glob.cbv_srv_uav_heap_start]
+        $mov [.param5], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+        $comcall ID3D12Device.CopyDescriptorsSimple
+
+
         ; reset completed command allocator
         $mov rcx, [.frame_res.cmdalloc]
         $comcall ID3D12CommandAllocator.Reset
@@ -319,15 +352,26 @@ scene1_update:
         $lea r8, [glob.scissor]
         $comcall ID3D12GraphicsCommandList.RSSetScissorRects
 
+        ; set descriptor heap
+        $mov rcx, [glob.cmdlist]
+        $mov edx, 1
+        $lea r8, [.frame_res.descriptor_heap]
+        $comcall ID3D12GraphicsCommandList.SetDescriptorHeaps
+
         ; set root signature and resources
         $mov rcx, [glob.cmdlist]
         $mov rdx, [glob.rootsig]
         $comcall ID3D12GraphicsCommandList.SetGraphicsRootSignature
 
         $mov rcx, [glob.cmdlist]
-        $xor edx, edx
+        $mov edx, 0
         $mov r8, [.frame_res.constant_buffer_view]
         $comcall ID3D12GraphicsCommandList.SetGraphicsRootConstantBufferView
+
+        $mov rcx, [glob.cmdlist]
+        $mov edx, 1
+        $mov r8, [.frame_res.descriptor_heap_gpu_start]
+        $comcall ID3D12GraphicsCommandList.SetGraphicsRootDescriptorTable
 
         ; vertex buffer view
         $mov rcx, [glob.cmdlist]

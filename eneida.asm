@@ -214,6 +214,7 @@ align 8
 glob:
   .mesh_vb dq 0
   .mesh_ib dq 0
+  .texture dq 0
 
   align 8
   .mesh_vb_view D3D12_VERTEX_BUFFER_VIEW
@@ -275,11 +276,12 @@ glob:
   .eye_up: dd 0.0, 1.0, 0.0, 0.0
 
   .tri_v0: dd -0.7, -0.7, 0.0, 1.0
-  .tri_v1: dd 0.0, 0.7, 0.0, 1.0
-  .tri_v2: dd 0.7, -0.7, 0.0, 1.0
+  .tri_v1: dd 0.0, 0.7, 0.5, 0.0
+  .tri_v2: dd 0.7, -0.7, 1.0, 1.0
 
   align 1
   .sz_position db 'POSITION', 0
+  .sz_texcoord db 'TEXCOORD', 0
   .sz_vs_object db 'data/shader/object_vs.cso', 0
   .sz_ps_object db 'data/shader/object_ps.cso', 0
 

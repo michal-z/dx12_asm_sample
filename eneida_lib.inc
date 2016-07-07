@@ -277,15 +277,32 @@ create_texture_from_file:
         $mov [.barrier.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
         $mov [.barrier.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 
-
+        ; TODO: load image instead of this
         $malloc 4 * 4 * 4
         $mov [.image_addr], rax
         $mov [.image_width], 4
         $mov [.image_height], 4
+
         $lea rcx, [.image_addr]
-        $mov edx, 4 * 4 * 4
-        $mov r8d, 127
+        $mov edx, 4 * 4
+        $mov r8d, 64
         $icall RtlFillMemory
+
+        $lea rcx, [.image_addr+16]
+        $mov edx, 4 * 4
+        $mov r8d, 128
+        $icall RtlFillMemory
+
+        $lea rcx, [.image_addr+32]
+        $mov edx, 4 * 4
+        $mov r8d, 192
+        $icall RtlFillMemory
+
+        $lea rcx, [.image_addr+48]
+        $mov edx, 4 * 4
+        $mov r8d, 255
+        $icall RtlFillMemory
+
 
 
         $mov [.upload_heap_props.Type], D3D12_HEAP_TYPE_DEFAULT
@@ -383,7 +400,7 @@ create_texture_from_file:
         $comcall ID3D12GraphicsCommandList.ResourceBarrier
 
 
-        $mov eax, 1
+        $mov rax, [.texture]
         $jmp .return
   .error:
         $xor eax, eax

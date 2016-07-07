@@ -204,7 +204,9 @@ struc frame_resources {
   .constant_buffer dq 0
   .constant_buffer_addr dq 0
   .constant_buffer_view dq 0
+
   .cmdalloc dq 0
+
   .descriptor_heap dq 0
   .descriptor_heap_cpu_start dq 0
   .descriptor_heap_gpu_start dq 0 }
@@ -256,7 +258,6 @@ glob:
   .cbv_srv_uav_size dd 0
   .back_buffer_index dd 0
   .frame_index dd 0
-  .clear_color dd 0.0, 0.2, 0.4, 1.0
 
   align 8
   .pso dq 0
@@ -264,26 +265,6 @@ glob:
 
   align 8
   .frame_res: rb (k_frame_count * sizeof.frame_resources)
-
-  align 4
-  .eye_half_fovy dd 0.52359876 ; pi / 6
-  .eye_nearz dd 1.0
-  .eye_farz dd 100.0
-
-  align 16
-  .eye_position: dd 1.7, 1.7, -1.7, 1.0
-  .eye_focus: dd 0.0, 0.0, 0.0, 1.0
-  .eye_up: dd 0.0, 1.0, 0.0, 0.0
-
-  .tri_v0: dd -0.7, -0.7, 0.0, 1.0
-  .tri_v1: dd 0.0, 0.7, 0.5, 0.0
-  .tri_v2: dd 0.7, -0.7, 1.0, 1.0
-
-  align 1
-  .sz_position db 'POSITION', 0
-  .sz_texcoord db 'TEXCOORD', 0
-  .sz_vs_object db 'data/shader/object_vs.cso', 0
-  .sz_ps_object db 'data/shader/object_ps.cso', 0
 
   align 8
   .win_handle dq 0
@@ -295,6 +276,30 @@ glob:
   .time dq 0
   .time_delta dd 0,0
 
+
+
+align 4
+eye_half_fovy dd 0.52359876 ; pi / 6
+eye_nearz dd 1.0
+eye_farz dd 100.0
+
+align 4
+clear_color dd 0.0, 0.2, 0.4, 1.0
+
+align 16
+eye_position: dd 1.7, 1.7, -1.7, 1.0
+eye_focus: dd 0.0, 0.0, 0.0, 1.0
+eye_up: dd 0.0, 1.0, 0.0, 0.0
+
+tri_v0: dd -0.7, -0.7, 0.0, 1.0
+tri_v1: dd 0.0, 0.7, 0.5, 0.0
+tri_v2: dd 0.7, -0.7, 1.0, 1.0
+
+align 1
+sz_position db 'POSITION', 0
+sz_texcoord db 'TEXCOORD', 0
+sz_vs_object db 'data/shader/object_vs.cso', 0
+sz_ps_object db 'data/shader/object_ps.cso', 0
 
 align 8
 get_time.perf_counter dq 0

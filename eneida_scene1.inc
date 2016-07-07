@@ -112,11 +112,11 @@ scene1_init:
         $call get_upload_buffer ; returns upload buffer in rax
 
         ; fill staging vertex buffer
-        $vmovaps xmm0, [glob.tri_v0]
+        $vmovaps xmm0, [tri_v0]
         $vmovaps [rdx], xmm0
-        $vmovaps xmm0, [glob.tri_v1]
+        $vmovaps xmm0, [tri_v1]
         $vmovaps [rdx+16], xmm0
-        $vmovaps xmm0, [glob.tri_v2]
+        $vmovaps xmm0, [tri_v2]
         $vmovaps [rdx+32], xmm0
 
         $mov rcx, [glob.cmdlist]
@@ -187,25 +187,25 @@ scene1_init:
 
 
         ; load VS
-        $lea rcx, [glob.sz_vs_object]
+        $lea rcx, [sz_vs_object]
         $call load_file
         $mov [.pso_desc.VS.pShaderBytecode], rax
         $mov [.pso_desc.VS.BytecodeLength], rdx
 
         ; load PS
-        $lea rcx, [glob.sz_ps_object]
+        $lea rcx, [sz_ps_object]
         $call load_file
         $mov [.pso_desc.PS.pShaderBytecode], rax
         $mov [.pso_desc.PS.BytecodeLength], rdx
 
 
-        $lea [.input_element_desc0.SemanticName], rax, [glob.sz_position]
+        $lea [.input_element_desc0.SemanticName], rax, [sz_position]
         $mov [.input_element_desc0.SemanticIndex], 0
         $mov [.input_element_desc0.Format], DXGI_FORMAT_R32G32_FLOAT
         $mov [.input_element_desc0.InputSlot], 0
         $mov [.input_element_desc0.AlignedByteOffset], 0
 
-        $lea [.input_element_desc1.SemanticName], rax, [glob.sz_texcoord]
+        $lea [.input_element_desc1.SemanticName], rax, [sz_texcoord]
         $mov [.input_element_desc1.SemanticIndex], 0
         $mov [.input_element_desc1.Format], DXGI_FORMAT_R32G32_FLOAT
         $mov [.input_element_desc1.InputSlot], 0
@@ -288,19 +288,19 @@ scene1_update:
 
 
         ; update rotation matrix
-        $vmovss xmm0, [glob.eye_half_fovy]
+        $vmovss xmm0, [eye_half_fovy]
         $call fast_sincosf
         $vmovss xmm2, [glob.viewport.Width]
         $vdivss xmm2, xmm2, [glob.viewport.Height]
-        $vmovss xmm3, [glob.eye_nearz]
-        $vmovss xmm4, [glob.eye_farz]
+        $vmovss xmm3, [eye_nearz]
+        $vmovss xmm4, [eye_farz]
         $matrixPerspectiveFov
         $vmovaps [.matrix], ymm0
         $vmovaps [.matrix+32], ymm1
 
-        $vmovaps xmm0, [glob.eye_position]
-        $vmovaps xmm1, [glob.eye_focus]
-        $vmovaps xmm2, [glob.eye_up]
+        $vmovaps xmm0, [eye_position]
+        $vmovaps xmm1, [eye_focus]
+        $vmovaps xmm2, [eye_up]
         $call matrix_look_at
 
         $vmovaps ymm2, [.matrix]
@@ -402,7 +402,7 @@ scene1_update:
         ; clear back buffer
         $mov rcx, [glob.cmdlist]
         $mov rdx, [.back_buffer_handle]
-        $lea r8, [glob.clear_color]
+        $lea r8, [clear_color]
         $xor r9d, r9d
         $mov [.param5], 0
         $comcall ID3D12GraphicsCommandList.ClearRenderTargetView

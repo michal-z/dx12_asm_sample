@@ -25,7 +25,7 @@ demo_init:
         $icall D3D12GetDebugInterface
         $checkhr eax, @f
         $mov rcx, [.dbgi]
-        $comcall ID3D12Debug.EnableDebugLayer
+        ;$comcall ID3D12Debug.EnableDebugLayer
         $safeRelease [.dbgi]
 
         ; DXGI factory

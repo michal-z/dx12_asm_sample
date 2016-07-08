@@ -13,7 +13,9 @@ demo_init:
   dalign 8
   .swapchain_desc DXGI_SWAP_CHAIN_DESC
   dalign 8
-  .swapchain_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
+  .rtv_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
+  dalign 8
+  .descriptor_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
   dalign 32
   .k_stack_size = $-$$+8
   end virtual
@@ -51,31 +53,13 @@ demo_init:
         $comcall ID3D12Device.CreateCommandQueue
         $checkhr eax, .error
 
-        ; command allocators
-        $lea rbx, [glob.frame_res]
-  virtual at rbx
-  .fres frame_resources
-  end virtual
-
-        $xor esi, esi
-  @@:   $mov rcx, [glob.device]
-        $mov edx, D3D12_COMMAND_LIST_TYPE_DIRECT
-        $lea r8, [IID_ID3D12CommandAllocator]
-        $lea r9, [.fres.cmdalloc]
-        $comcall ID3D12Device.CreateCommandAllocator
-        $checkhr eax, .error
-
-        $add rbx, sizeof.frame_resources
-        $add esi, 1
-        $cmp esi, k_frame_count
-        $jb @b
 
         ; swapchain
         $mov [.swapchain_desc.BufferDesc.Width], eax, [glob.win_width]
         $mov [.swapchain_desc.BufferDesc.Height], eax, [glob.win_height]
         $mov [.swapchain_desc.BufferDesc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
         $mov [.swapchain_desc.SampleDesc.Count], 1
-        $mov [.swapchain_desc.BufferCount], k_swapchain_buffer_count
+        $mov [.swapchain_desc.BufferCount], k_swapchain_buffers_count
         $mov [.swapchain_desc.OutputWindow], rax, [glob.win_handle]
         $mov [.swapchain_desc.Windowed], 1
         $mov [.swapchain_desc.SwapEffect], DXGI_SWAP_EFFECT_FLIP_DISCARD
@@ -92,6 +76,7 @@ demo_init:
         $lea r8, [glob.swapchain]
         $comcall IUnknown.QueryInterface
         $safeRelease [.swapchain]
+
 
         ; viewport & scissor
         $vxorps xmm2, xmm2, xmm2
@@ -120,10 +105,10 @@ demo_init:
         $mov [glob.cbv_srv_uav_size], eax
 
         ; swapchain descriptor heap
-        $mov [.swapchain_heap_desc.Type], D3D12_DESCRIPTOR_HEAP_TYPE_RTV
-        $mov [.swapchain_heap_desc.NumDescriptors], k_swapchain_buffer_count
+        $mov [.rtv_heap_desc.Type], D3D12_DESCRIPTOR_HEAP_TYPE_RTV
+        $mov [.rtv_heap_desc.NumDescriptors], k_swapchain_buffers_count
         $mov rcx, [glob.device]
-        $lea rdx, [.swapchain_heap_desc]
+        $lea rdx, [.rtv_heap_desc]
         $lea r8, [IID_ID3D12DescriptorHeap]
         $lea r9, [glob.rtv_heap]
         $comcall ID3D12Device.CreateDescriptorHeap
@@ -153,8 +138,80 @@ demo_init:
         $comcall ID3D12Device.CreateRenderTargetView
 
         $add esi, 1
-        $cmp esi, k_swapchain_buffer_count
+        $cmp esi, k_swapchain_buffers_count
         $jb .for_each_swap_buffer
+
+
+        ; init descriptor heap desc
+        $mov [.descriptor_heap_desc.Type], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+        $mov [.descriptor_heap_desc.NumDescriptors], k_max_descriptors_count
+        $mov [.descriptor_heap_desc.Flags], D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
+
+        $lea rbx, [glob.frame_res]
+  virtual at rbx
+  .frame_res frame_resources
+  end virtual
+
+  .frame_resources_loop:
+        ; create command allocator
+        $mov rcx, [glob.device]
+        $mov edx, D3D12_COMMAND_LIST_TYPE_DIRECT
+        $lea r8, [IID_ID3D12CommandAllocator]
+        $lea r9, [.frame_res.cmdalloc]
+        $comcall ID3D12Device.CreateCommandAllocator
+        $checkhr eax, .error
+
+        ; create constant buffer
+        $mov ecx, 1024
+        $call create_upload_buffer
+        $mov [.frame_res.constant_buffer], rax
+        $mov [.frame_res.constant_buffer_addr], rdx
+
+        $mov rcx, [.frame_res.constant_buffer]
+        $comcall ID3D12Resource.GetGPUVirtualAddress
+        $mov [.frame_res.constant_buffer_view], rax
+
+        ; create descriptor heap
+        $mov rcx, [glob.device]
+        $lea rdx, [.descriptor_heap_desc]
+        $lea r8, [IID_ID3D12DescriptorHeap]
+        $lea r9, [.frame_res.descriptor_heap]
+        $comcall ID3D12Device.CreateDescriptorHeap
+        $checkhr eax, .error
+
+        $mov rcx, [.frame_res.descriptor_heap]
+        $lea rdx, [.frame_res.descriptor_heap_cpu_start]
+        $comcall ID3D12DescriptorHeap.GetCPUDescriptorHandleForHeapStart
+        $mov [.frame_res.descriptor_heap_cpu_start], rax, [rax]
+
+        $mov rcx, [.frame_res.descriptor_heap]
+        $lea rdx, [.frame_res.descriptor_heap_gpu_start]
+        $comcall ID3D12DescriptorHeap.GetGPUDescriptorHandleForHeapStart
+        $mov [.frame_res.descriptor_heap_gpu_start], rax, [rax]
+
+
+        $add rbx, sizeof.frame_resources
+        $cmp rbx, glob.frame_res + k_buffered_frames_count * sizeof.frame_resources
+        $jb .frame_resources_loop
+
+
+
+        ; create cpu only descriptor heap
+        $mov [.descriptor_heap_desc.NumDescriptors], k_max_descriptors_count
+        $mov [.descriptor_heap_desc.Flags], 0
+
+        $mov rcx, [glob.device]
+        $lea rdx, [.descriptor_heap_desc]
+        $lea r8, [IID_ID3D12DescriptorHeap]
+        $lea r9, [glob.cbv_srv_uav_heap]
+        $comcall ID3D12Device.CreateDescriptorHeap
+        $checkhr eax, .error
+
+        $mov rcx, [glob.cbv_srv_uav_heap]
+        $lea rdx, [glob.cbv_srv_uav_heap_start]
+        $comcall ID3D12DescriptorHeap.GetCPUDescriptorHandleForHeapStart
+        $mov [glob.cbv_srv_uav_heap_start], rax, [rax]
+
 
 
         ; frame fence
@@ -179,9 +236,9 @@ demo_init:
         ; create command list
         $lea rbx, [glob.frame_res]
         $mov rcx, [glob.device]
-        $xor edx, edx
+        $mov edx, 0
         $mov r8d, D3D12_COMMAND_LIST_TYPE_DIRECT
-        $mov r9, [.fres.cmdalloc]
+        $mov r9, [.frame_res.cmdalloc]
         $mov [.param5], 0
         $lea [.param6], rax, [IID_ID3D12GraphicsCommandList]
         $lea [.param7], rax, [glob.cmdlist]
@@ -217,15 +274,54 @@ demo_init:
 falign
 demo_deinit:
 ;-----------------------------------------------------------------------------
-  .k_stack_size = 32*1+24
+  .k_stack_size = 32*1+16
+        $push rbx
         $sub rsp, .k_stack_size
+
+        $call scene1_deinit
+
+        $lea rbx, [glob.frame_res]
+  virtual at rbx
+  .frame_res frame_resources
+  end virtual
+
+  .frame_resources_loop:
+        $safeRelease [.frame_res.constant_buffer]
+        $safeRelease [.frame_res.cmdalloc]
+        $safeRelease [.frame_res.descriptor_heap]
+
+        $add rbx, sizeof.frame_resources
+        $cmp rbx, glob.frame_res + k_buffered_frames_count * sizeof.frame_resources
+        $jb .frame_resources_loop
+
+
+        $xor ebx, ebx
+  .upload_buffers_loop:
+        $safeRelease [glob.upload_buffers+rbx*8]
+        $add ebx, 1
+        $cmp ebx, [glob.upload_buffers_count]
+        $jne .upload_buffers_loop
+
+
+        $xor ebx, ebx
+  .swapchain_buffers_loop:
+        $safeRelease [glob.swapchain_buffers+rbx*8]
+        $add ebx, 1
+        $cmp ebx, k_swapchain_buffers_count
+        $jne .swapchain_buffers_loop
+
 
         $safeRelease [glob.cmdlist]
         $safeRelease [glob.frame_fence]
         $safeRelease [glob.rtv_heap]
+        $safeRelease [glob.cbv_srv_uav_heap]
         $safeRelease [glob.swapchain]
+        $safeRelease [glob.cmdqueue]
+        $safeRelease [glob.device]
+        $safeRelease [glob.factory_dxgi]
 
   @@:   $add rsp, .k_stack_size
+        $pop rbx
         $ret
 ;=============================================================================
 falign
@@ -256,7 +352,7 @@ demo_update:
         $mov rsi, rax
         $mov rax, [glob.cpu_completed_fences]
         $sub rax, rsi
-        $cmp eax, k_frame_count
+        $cmp eax, k_buffered_frames_count
         $jb @f
 
         ; wait for the GPU to finish one frame
@@ -278,7 +374,7 @@ demo_update:
         $xor edx, edx
         $mov eax, [glob.frame_index]
         $add eax, 1
-        $mov ecx, k_frame_count
+        $mov ecx, k_buffered_frames_count
         $div rcx
         $mov [glob.frame_index], edx
 

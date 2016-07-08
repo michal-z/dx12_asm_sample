@@ -345,11 +345,10 @@ create_texture_from_file:
         $comcall ID3D12Device.CreateCommittedResource
         $checkhr eax, .error
 
+
         $mov [.copy_dst.pResource], rax, [.texture]
         $mov [.copy_dst.Type], eax, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX
         $mov [.copy_dst.SubresourceIndex], 0
-
-
 
         $mov [.copy_src.pResource], rax, [.upload_buffer]
         $mov [.copy_src.Type], eax, D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT
@@ -369,7 +368,6 @@ create_texture_from_file:
         $lea [.param6], rax, [.copy_src]
         $mov [.param7], 0
         $comcall ID3D12GraphicsCommandList.CopyTextureRegion
-
 
         $transitionBarrier .barrier, [.texture], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
         $mov rcx, [glob.cmdlist]

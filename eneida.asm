@@ -194,9 +194,11 @@ macro $vshufps d*, s0*, s1*, fp3*, fp2, fp1, fp0 {
   end if }
 
 
-k_frame_count equ 3
 k_win_style equ WS_OVERLAPPED+WS_SYSMENU+WS_CAPTION+WS_MINIMIZEBOX
-k_swapchain_buffer_count equ 4
+k_buffered_frames_count equ 3
+k_swapchain_buffers_count equ 4
+k_upload_buffers_count equ 16
+k_max_descriptors_count equ 1000
 ;========================================================================
 section '.data' data readable writeable
 
@@ -225,7 +227,6 @@ glob:
   .mesh_ib_view D3D12_INDEX_BUFFER_VIEW
 
   align 8
-  k_upload_buffers_count equ 16
   .upload_buffers dq k_upload_buffers_count dup 0
   .upload_buffers_count dd 0, 0
 
@@ -236,7 +237,7 @@ glob:
   .cmdlist dq 0
 
   .swapchain dq 0
-  .swapchain_buffers dq k_swapchain_buffer_count dup 0
+  .swapchain_buffers dq k_swapchain_buffers_count dup 0
 
   .rtv_heap dq 0
   .rtv_heap_start dq 0
@@ -264,7 +265,7 @@ glob:
   .rootsig dq 0
 
   align 8
-  .frame_res: rb (k_frame_count * sizeof.frame_resources)
+  .frame_res: rb (k_buffered_frames_count * sizeof.frame_resources)
 
   align 8
   .win_handle dq 0

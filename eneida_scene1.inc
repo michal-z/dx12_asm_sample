@@ -13,8 +13,6 @@ scene1_init:
   dalign 8
   rept 2 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
   dalign 8
-  .descriptor_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
-  dalign 8
   .srv_desc D3D12_SHADER_RESOURCE_VIEW_DESC
   dalign 32
   .k_stack_size = $-$$+8
@@ -26,69 +24,6 @@ scene1_init:
         $mov [.barrier0.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
         $mov [.barrier1.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
         $mov [.barrier1.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
-
-        ; init descriptor heap desc
-        $mov [.descriptor_heap_desc.Type], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-        $mov [.descriptor_heap_desc.NumDescriptors], 1000
-        $mov [.descriptor_heap_desc.Flags], D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
-
-
-        $lea rbx, [glob.frame_res]
-  virtual at rbx
-  .frame_res frame_resources
-  end virtual
-
-  .frame_resources_loop:
-        ; create constant buffer
-        $mov ecx, 1024
-        $call create_upload_buffer
-        $mov [.frame_res.constant_buffer], rax
-        $mov [.frame_res.constant_buffer_addr], rdx
-
-        $mov rcx, [.frame_res.constant_buffer]
-        $comcall ID3D12Resource.GetGPUVirtualAddress
-        $mov [.frame_res.constant_buffer_view], rax
-
-
-        ; create descriptor heap
-        $mov rcx, [glob.device]
-        $lea rdx, [.descriptor_heap_desc]
-        $lea r8, [IID_ID3D12DescriptorHeap]
-        $lea r9, [.frame_res.descriptor_heap]
-        $comcall ID3D12Device.CreateDescriptorHeap
-        $checkhr eax, .error
-
-        $mov rcx, [.frame_res.descriptor_heap]
-        $lea rdx, [.frame_res.descriptor_heap_cpu_start]
-        $comcall ID3D12DescriptorHeap.GetCPUDescriptorHandleForHeapStart
-        $mov [.frame_res.descriptor_heap_cpu_start], rax, [rax]
-
-        $mov rcx, [.frame_res.descriptor_heap]
-        $lea rdx, [.frame_res.descriptor_heap_gpu_start]
-        $comcall ID3D12DescriptorHeap.GetGPUDescriptorHandleForHeapStart
-        $mov [.frame_res.descriptor_heap_gpu_start], rax, [rax]
-
-
-        $add rbx, sizeof.frame_resources
-        $cmp rbx, glob.frame_res + k_frame_count * sizeof.frame_resources
-        $jb .frame_resources_loop
-
-
-        ; create cpu only descriptor heap
-        $mov [.descriptor_heap_desc.NumDescriptors], 1000
-        $mov [.descriptor_heap_desc.Flags], 0
-
-        $mov rcx, [glob.device]
-        $lea rdx, [.descriptor_heap_desc]
-        $lea r8, [IID_ID3D12DescriptorHeap]
-        $lea r9, [glob.cbv_srv_uav_heap]
-        $comcall ID3D12Device.CreateDescriptorHeap
-        $checkhr eax, .error
-
-        $mov rcx, [glob.cbv_srv_uav_heap]
-        $lea rdx, [glob.cbv_srv_uav_heap_start]
-        $comcall ID3D12DescriptorHeap.GetCPUDescriptorHandleForHeapStart
-        $mov [glob.cbv_srv_uav_heap_start], rax, [rax]
 
 
 
@@ -257,6 +192,16 @@ scene1_init:
 falign
 scene1_deinit:
 ;-----------------------------------------------------------------------------
+  .k_stack_size = 32*1+24
+        $sub rsp, .k_stack_size
+
+        $safeRelease [glob.mesh_vb]
+        $safeRelease [glob.mesh_ib]
+        $safeRelease [glob.texture]
+        $safeRelease [glob.pso]
+        $safeRelease [glob.rootsig]
+
+        $add rsp, .k_stack_size
         $ret
 ;=============================================================================
 falign

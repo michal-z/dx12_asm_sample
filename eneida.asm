@@ -287,7 +287,7 @@ align 4
 clear_color dd 0.0, 0.2, 0.4, 1.0
 
 align 16
-eye_position: dd 1.7, 1.7, -1.7, 1.0
+eye_position: dd 1.2, 1.2, -1.2, 1.0
 eye_focus: dd 0.0, 0.0, 0.0, 1.0
 eye_up: dd 0.0, 1.0, 0.0, 0.0
 
@@ -300,7 +300,7 @@ sz_position db 'POSITION', 0
 sz_texcoord db 'TEXCOORD', 0
 sz_vs_object db 'data/shader/object_vs.cso', 0
 sz_ps_object db 'data/shader/object_ps.cso', 0
-sz_img_gradient db 'data/image/gradient.tga', 0
+sz_img_gradient db 'data/image/ceiling_GRosinWoodDirty_256_d.tga', 0
 
 align 8
 get_time.perf_counter dq 0

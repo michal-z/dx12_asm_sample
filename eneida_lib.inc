@@ -255,7 +255,6 @@ create_texture_from_file:
   .image_width dd ?
   .image_height dd ?
   .image_addr dq ?
-  .text rb 256
   dalign 8
   .copy_dst D3D12_TEXTURE_COPY_LOCATION
   dalign 8
@@ -277,12 +276,15 @@ create_texture_from_file:
         $mov [.barrier.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
         $mov [.barrier.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 
-        ; TODO: load image instead of this
+
+        ; load image data from file (file name addr in rcx, only BGRA8 TGA are supported)
         $call load_file
+        $movzx ecx, word[rax+12]
+        $mov [.image_width], ecx
+        $movzx ecx, word[rax+14]
+        $mov [.image_height], ecx
         $add rax, 18
         $mov [.image_addr], rax
-        $mov [.image_width], 16
-        $mov [.image_height], 16
 
 
         $mov [.upload_heap_props.Type], D3D12_HEAP_TYPE_DEFAULT
@@ -307,7 +309,7 @@ create_texture_from_file:
         $comcall ID3D12Device.GetCopyableFootprints
 
 
-
+        ; copy image content to upload buffer
         $mov rcx, [.buffer_size]
         $call get_upload_buffer
         $mov [.upload_buffer], rax
@@ -326,6 +328,10 @@ create_texture_from_file:
         $sub ebx, 1
         $jnz .copy_loop
 
+        ; free allocated memory
+        $mov rax, [.image_addr]
+        $sub rax, 18
+        $free rax
 
         ; create texture
         $mov rcx, [glob.device]
@@ -343,14 +349,6 @@ create_texture_from_file:
         $mov [.copy_dst.Type], eax, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX
         $mov [.copy_dst.SubresourceIndex], 0
 
-        ;$lea rcx, [.text]
-        ;$lea rdx, [.k_text_fmt]
-        ;$mov r8d, [.layout.Footprint.RowPitch]
-        ;$mov r9d, [.layout.Footprint.Width]
-        ;$mov [.param5], rax, [.buffer_size]
-        ;$icall wsprintf
-        ;$lea rcx, [.text]
-        ;$icall OutputDebugString
 
 
         $mov [.copy_src.pResource], rax, [.upload_buffer]
@@ -388,5 +386,4 @@ create_texture_from_file:
         $add rsp, .k_stack_size
         $pop rbx rdi rsi
         $ret
-  ;.k_text_fmt db 'RowPitch: %d, row_size: %d, buffer_size: %d', 0
 ;=============================================================================

@@ -2,7 +2,7 @@
     "RootFlags(ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT), " \
     "CBV(b0, visibility = SHADER_VISIBILITY_VERTEX), " \
     "DescriptorTable(SRV(t0), visibility = SHADER_VISIBILITY_PIXEL), " \
-    "StaticSampler(s0, filter = FILTER_MIN_MAG_MIP_POINT, visibility = SHADER_VISIBILITY_PIXEL)"
+    "StaticSampler(s0, filter = FILTER_ANISOTROPIC, visibility = SHADER_VISIBILITY_PIXEL)"
 
 struct vs_in
 {
@@ -41,7 +41,7 @@ SamplerState g_sampler : register(s0);
 [RootSignature(rs)]
 float4 object_ps(vs_out i) : SV_Target0
 {
-  return g_texture.Sample(g_sampler, i.texcoord);
+  return g_texture.SampleLevel(g_sampler, i.texcoord, 0.0f);
 }
 
 

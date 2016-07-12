@@ -468,6 +468,15 @@ struc D3D12_GRAPHICS_PIPELINE_STATE_DESC {
   .Flags dd ?,? }
 struc_offsets_size D3D12_GRAPHICS_PIPELINE_STATE_DESC
 
+struc D3D12_COMPUTE_PIPELINE_STATE_DESC {
+  .pRootSignature dq ?
+  .CS D3D12_SHADER_BYTECODE
+  .NodeMask dd ?
+  dd ?
+  .CachedPSO D3D12_CACHED_PIPELINE_STATE
+  .Flags dd ?
+  dd ? }
+
 struc D3D12_RANGE {
   .Begin dq ?
   .End dq ? }
@@ -749,6 +758,73 @@ D3D12_FILTER_MAXIMUM_ANISOTROPIC = 0x1d5
 
 D3D12_FILTER_TYPE_POINT = 0
 D3D12_FILTER_TYPE_LINEAR = 1
+
+D3D12_BUFFER_UAV_FLAG_NONE = 0
+D3D12_BUFFER_UAV_FLAG_RAW = 0x1
+
+struc D3D12_BUFFER_UAV {
+  .FirstElement dq ?
+  .NumElements dd ?
+  .StructureByteStride dd ?
+  .CounterOffsetInBytes dq ?
+  .Flags dd ?
+  dd ? }
+
+struc D3D12_TEX1D_UAV {
+  .MipSlice dd ? }
+
+struc D3D12_TEX1D_ARRAY_UAV {
+  .MipSlice dd ?
+  .FirstArraySlice dd ?
+  .ArraySize dd ? }
+
+struc D3D12_TEX2D_UAV {
+  .MipSlice dd ?
+  .PlaneSlice dd ? }
+
+struc D3D12_TEX2D_ARRAY_UAV {
+  .MipSlice dd ?
+  .FirstArraySlice dd ?
+  .ArraySize dd ?
+  .PlaneSlice dd ? }
+
+struc D3D12_TEX3D_UAV {
+  .MipSlice dd ?
+  .FirstWSlice dd ?
+  .WSize dd ? }
+
+D3D12_UAV_DIMENSION_UNKNOWN = 0
+D3D12_UAV_DIMENSION_BUFFER = 1
+D3D12_UAV_DIMENSION_TEXTURE1D = 2
+D3D12_UAV_DIMENSION_TEXTURE1DARRAY = 3
+D3D12_UAV_DIMENSION_TEXTURE2D = 4
+D3D12_UAV_DIMENSION_TEXTURE2DARRAY = 5
+D3D12_UAV_DIMENSION_TEXTURE3D = 8
+
+struc D3D12_UNORDERED_ACCESS_VIEW_DESC {
+  .Format dd ?
+  .ViewDimension dd ?
+  .Buffer D3D12_BUFFER_UAV
+
+  virtual at .Buffer
+  .Texture1D D3D12_TEX1D_UAV
+  end virtual
+
+  virtual at .Buffer
+  .Texture1DArray D3D12_TEX1D_ARRAY_UAV
+  end virtual
+
+  virtual at .Buffer
+  .Texture2D D3D12_TEX2D_UAV
+  end virtual
+
+  virtual at .Buffer
+  .Texture2DArray D3D12_TEX2D_ARRAY_UAV
+  end virtual
+
+  virtual at .Buffer
+  .Texture3D D3D12_TEX3D_UAV
+  end virtual }
 
 virtual at 0
 ID3D12Device:

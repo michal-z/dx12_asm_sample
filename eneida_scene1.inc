@@ -14,6 +14,8 @@ scene1_init:
   rept 2 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
   dalign 8
   .srv_desc D3D12_SHADER_RESOURCE_VIEW_DESC
+  dalign 8
+  .mipgen mipmap_generator
   dalign 32
   .k_stack_size = $-$$+8
   end virtual
@@ -121,6 +123,13 @@ scene1_init:
         $comcall ID3D12Device.CreateShaderResourceView
 
 
+        $lea rcx, [.mipgen]
+        $mov rdx, [glob.frame_res0.dheap_cpu_start]
+        $mov r8, [glob.frame_res0.dheap_gpu_start]
+        $call mipgen_init
+        $test eax, eax
+        $jz .error
+
 
         ; load VS
         $lea rcx, [sz_vs_object]
@@ -222,7 +231,7 @@ scene1_update:
 
         $mov r12d, [glob.frame_index]
         $imul r12d, sizeof.frame_resources
-        $lea r12, [r12+glob.frame_res]
+        $lea r12, [r12+glob.frame_res0]
   virtual at r12
   .frame_res frame_resources
   end virtual
@@ -272,7 +281,7 @@ scene1_update:
 
         $mov rcx, [glob.device]
         $mov edx, 1
-        $mov r8, [.frame_res.descriptor_heap_cpu_start]
+        $mov r8, [.frame_res.dheap_cpu_start]
         $mov r9, [glob.cbv_srv_uav_heap_start]
         $mov [.param5], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
         $comcall ID3D12Device.CopyDescriptorsSimple
@@ -301,7 +310,7 @@ scene1_update:
         ; set descriptor heap
         $mov rcx, [glob.cmdlist]
         $mov edx, 1
-        $lea r8, [.frame_res.descriptor_heap]
+        $lea r8, [.frame_res.dheap]
         $comcall ID3D12GraphicsCommandList.SetDescriptorHeaps
 
         ; set root signature and resources
@@ -316,7 +325,7 @@ scene1_update:
 
         $mov rcx, [glob.cmdlist]
         $mov edx, 1
-        $mov r8, [.frame_res.descriptor_heap_gpu_start]
+        $mov r8, [.frame_res.dheap_gpu_start]
         $comcall ID3D12GraphicsCommandList.SetGraphicsRootDescriptorTable
 
         ; vertex buffer view

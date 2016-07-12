@@ -147,7 +147,7 @@ demo_init:
         $mov [.descriptor_heap_desc.NumDescriptors], k_max_descriptors_count
         $mov [.descriptor_heap_desc.Flags], D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
 
-        $lea rbx, [glob.frame_res]
+        $lea rbx, [glob.frame_res0]
   virtual at rbx
   .frame_res frame_resources
   end virtual
@@ -175,23 +175,23 @@ demo_init:
         $mov rcx, [glob.device]
         $lea rdx, [.descriptor_heap_desc]
         $lea r8, [IID_ID3D12DescriptorHeap]
-        $lea r9, [.frame_res.descriptor_heap]
+        $lea r9, [.frame_res.dheap]
         $comcall ID3D12Device.CreateDescriptorHeap
         $checkhr eax, .error
 
-        $mov rcx, [.frame_res.descriptor_heap]
-        $lea rdx, [.frame_res.descriptor_heap_cpu_start]
+        $mov rcx, [.frame_res.dheap]
+        $lea rdx, [.frame_res.dheap_cpu_start]
         $comcall ID3D12DescriptorHeap.GetCPUDescriptorHandleForHeapStart
-        $mov [.frame_res.descriptor_heap_cpu_start], rax, [rax]
+        $mov [.frame_res.dheap_cpu_start], rax, [rax]
 
-        $mov rcx, [.frame_res.descriptor_heap]
-        $lea rdx, [.frame_res.descriptor_heap_gpu_start]
+        $mov rcx, [.frame_res.dheap]
+        $lea rdx, [.frame_res.dheap_gpu_start]
         $comcall ID3D12DescriptorHeap.GetGPUDescriptorHandleForHeapStart
-        $mov [.frame_res.descriptor_heap_gpu_start], rax, [rax]
+        $mov [.frame_res.dheap_gpu_start], rax, [rax]
 
 
         $add rbx, sizeof.frame_resources
-        $cmp rbx, glob.frame_res + k_buffered_frames_count * sizeof.frame_resources
+        $cmp rbx, glob.frame_res0 + k_buffered_frames_count * sizeof.frame_resources
         $jb .frame_resources_loop
 
 
@@ -234,7 +234,7 @@ demo_init:
         $jz .error
 
         ; create command list
-        $lea rbx, [glob.frame_res]
+        $lea rbx, [glob.frame_res0]
         $mov rcx, [glob.device]
         $mov edx, 0
         $mov r8d, D3D12_COMMAND_LIST_TYPE_DIRECT
@@ -280,7 +280,7 @@ demo_deinit:
 
         $call scene1_deinit
 
-        $lea rbx, [glob.frame_res]
+        $lea rbx, [glob.frame_res0]
   virtual at rbx
   .frame_res frame_resources
   end virtual
@@ -288,10 +288,10 @@ demo_deinit:
   .frame_resources_loop:
         $safeRelease [.frame_res.constant_buffer]
         $safeRelease [.frame_res.cmdalloc]
-        $safeRelease [.frame_res.descriptor_heap]
+        $safeRelease [.frame_res.dheap]
 
         $add rbx, sizeof.frame_resources
-        $cmp rbx, glob.frame_res + k_buffered_frames_count * sizeof.frame_resources
+        $cmp rbx, glob.frame_res0 + k_buffered_frames_count * sizeof.frame_resources
         $jb .frame_resources_loop
 
 

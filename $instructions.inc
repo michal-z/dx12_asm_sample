@@ -69,3 +69,4 @@ $lock fix lock
 $xadd fix xadd
 $jae fix jae
 $movzx fix movzx
+$shr fix shr

@@ -209,9 +209,18 @@ struc frame_resources {
 
   .cmdalloc dq 0
 
-  .descriptor_heap dq 0
-  .descriptor_heap_cpu_start dq 0
-  .descriptor_heap_gpu_start dq 0 }
+  .dheap dq 0
+  .dheap_cpu_start dq 0
+  .dheap_gpu_start dq 0 }
+
+
+struc mipmap_generator {
+  .pso dq 0
+  .rootsig dq 0
+  .mip_textures dq 4 dup 0
+  .dheap_cpu_start dq 0
+  .dheap_gpu_start dq 0 }
+
 struc_offsets_size frame_resources
 
 align 8
@@ -265,7 +274,7 @@ glob:
   .rootsig dq 0
 
   align 8
-  .frame_res: rb (k_buffered_frames_count * sizeof.frame_resources)
+  rept k_buffered_frames_count n:0 { .frame_res#n frame_resources }
 
   align 8
   .win_handle dq 0
@@ -302,6 +311,7 @@ sz_texcoord db 'TEXCOORD', 0
 sz_vs_object db 'data/shader/object_vs.cso', 0
 sz_ps_object db 'data/shader/object_ps.cso', 0
 sz_img_gradient db 'data/image/ceiling_GRosinWoodDirty_256_d.tga', 0
+sz_cs_mipgen db 'data/shader/mipgen_cs.cso', 0
 
 align 8
 get_time.perf_counter dq 0
@@ -364,6 +374,7 @@ include 'eneida_math.inc'
 include 'eneida_demo.inc'
 include 'eneida_scene1.inc'
 include 'eneida_lib.inc'
+include 'eneida_mipgen.inc'
 ;=============================================================================
 falign
 check_cpu_extensions:
@@ -423,7 +434,7 @@ update_frame_stats:
         $vmovsd [.prev_update_time], xmm0
         $mov eax, [.frame]
         $vxorpd xmm1, xmm1, xmm1
-        $vcvtsi2sd xmm1,xmm1,eax                ; xmm1 = (0,frame)
+        $vcvtsi2sd xmm1, xmm1, eax              ; xmm1 = (0,frame)
         $vdivsd xmm0, xmm1, xmm2                ; xmm0 = (0,frame/(time-prev_update_time))
         $vdivsd xmm1, xmm2, xmm1
         $vmulsd xmm1, xmm1, [k_f64_1000000_0]

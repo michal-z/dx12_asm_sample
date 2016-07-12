@@ -9,7 +9,6 @@ mipgen_init:
         $sub rsp, .k_stack_size
   virtual at rsp
   rept 8 n { .param#n dq ? }
-  .barrier D3D12_RESOURCE_BARRIER
   dalign 8
   .upload_heap_props D3D12_HEAP_PROPERTIES
   dalign 8
@@ -62,6 +61,7 @@ mipgen_init:
 
         ; create texture view
         $mov eax, esi
+        $add eax, 1
         $imul eax, [glob.cbv_srv_uav_size]
         $add rax, [.mipgen.dheap_cpu_start]
 
@@ -110,5 +110,50 @@ mipgen_init:
         $add rsp, .k_stack_size
         $pop rsi r12
         $ret
+;=============================================================================
+; in: rcx - mipmap_generator structure addr
+; in: rdx - command list
+; in: r8 - texture resource
+falign
+mipgen_record_commands:
+;-----------------------------------------------------------------------------
+        $push r12 rsi rdi
+        $sub rsp, .k_stack_size
+  virtual at rsp
+  rept 8 n { .param#n dq ? }
+  rept 5 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
+  dalign 8
+  .texture_desc D3D12_RESOURCE_DESC
+  dalign 32
+  .k_stack_size = $-$$
+  end virtual
+
+        $mov r12, rcx
+  virtual at r12
+  .mipgen mipmap_generator
+  end virtual
+
+        $zeroStack .k_stack_size
+
+        $mov rcx, r8
+        $lea rdx, [.texture_desc]
+        $comcall ID3D12Resource.GetDesc
 
 
+  match = 1, DEBUG {
+  local ..print, ..txt_fmt
+        $jmp ..print
+  ..txt_fmt db 'width: %d  height: %d', 0
+  ..print:
+        $lea rcx, [output_debug_string]
+        $lea rdx, [..txt_fmt]
+        $mov r8, [.texture_desc.Width]
+        $mov r9d, [.texture_desc.Height]
+        $icall wsprintf
+        $lea rcx, [output_debug_string]
+        $icall OutputDebugString }
+
+
+        $add rsp, .k_stack_size
+        $pop rdi rsi r12
+        $ret

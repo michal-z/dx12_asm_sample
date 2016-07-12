@@ -130,6 +130,11 @@ scene1_init:
         $test eax, eax
         $jz .error
 
+        $lea rcx, [.mipgen]
+        $mov rdx, [glob.cmdlist]
+        $mov r8, [glob.texture]
+        $call mipgen_record_commands
+
 
         ; load VS
         $lea rcx, [sz_vs_object]

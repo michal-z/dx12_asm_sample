@@ -89,6 +89,8 @@ end virtual
 include '$instructions.inc'
 include 'd3d12.inc'
 ;========================================================================
+DEBUG equ 1
+
 macro emit [inst] {
   forward
         inst }
@@ -125,14 +127,14 @@ macro $malloc size* {
         $icall HeapAlloc }
 
 macro $free ptr* {
-  local .end
+  local ..end
         $mov r8, ptr
         $test r8, r8
-        $jz .end
+        $jz ..end
         $mov rcx, [glob.process_heap]
         $xor edx, edx
         $icall HeapFree
-  .end: }
+  ..end: }
 
 macro $safeClose handle* {
   local .end
@@ -286,7 +288,8 @@ glob:
   .time dq 0
   .time_delta dd 0,0
 
-
+match = 1, DEBUG {
+output_debug_string rb 256 }
 
 align 4
 eye_half_fovy dd 0.52359876 ; pi / 6

@@ -117,7 +117,7 @@ mipgen_init:
 falign
 mipgen_record_commands:
 ;-----------------------------------------------------------------------------
-        $push r12 rsi rdi
+        $push r12 r13 rsi rdi
         $sub rsp, .k_stack_size
   virtual at rsp
   rept 8 n { .param#n dq ? }
@@ -125,12 +125,17 @@ mipgen_record_commands:
   dalign 8
   .texture_desc D3D12_RESOURCE_DESC
   dalign 32
-  .k_stack_size = $-$$
+  .k_stack_size = $-$$+24
   end virtual
 
         $mov r12, rcx
   virtual at r12
   .mipgen mipmap_generator
+  end virtual
+
+        $mov r13, rdx
+  virtual at r13
+  .cmdlist dq ?
   end virtual
 
         $zeroStack .k_stack_size
@@ -155,5 +160,5 @@ mipgen_record_commands:
 
 
         $add rsp, .k_stack_size
-        $pop rdi rsi r12
+        $pop rdi rsi r12 r13
         $ret

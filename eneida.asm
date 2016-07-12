@@ -289,7 +289,7 @@ glob:
   .time_delta dd 0,0
 
 match = 1, DEBUG {
-output_debug_string rb 256 }
+  output_debug_string rb 256 }
 
 align 4
 eye_half_fovy dd 0.52359876 ; pi / 6

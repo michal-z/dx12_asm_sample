@@ -123,12 +123,20 @@ scene1_init:
         $comcall ID3D12Device.CreateShaderResourceView
 
 
+        ; init mipmap generator
         $lea rcx, [.mipgen]
         $mov rdx, [glob.frame_res0.dheap_cpu_start]
         $mov r8, [glob.frame_res0.dheap_gpu_start]
         $call mipgen_init
         $test eax, eax
         $jz .error
+
+        ; set descriptor heap used for mipmap generation
+        $mov rcx, [glob.cmdlist]
+        $mov edx, 1
+        $lea r8, [glob.frame_res0.dheap]
+        $comcall ID3D12GraphicsCommandList.SetDescriptorHeaps
+
 
         $lea rcx, [.mipgen]
         $mov rdx, [glob.cmdlist]

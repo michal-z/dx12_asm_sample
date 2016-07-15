@@ -46,7 +46,7 @@ mipgen_init:
         $mov [.uav_desc.ViewDimension], D3D12_UAV_DIMENSION_TEXTURE2D
 
         $xor esi, esi
-  .create_textures_loop:
+  .create_uavs_loop:
         ; create texture
         $mov rcx, [glob.device]
         $lea rdx, [.upload_heap_props]
@@ -76,7 +76,7 @@ mipgen_init:
         $shr [.texture_desc.Height], 1
         $add esi, 1
         $cmp esi, 4
-        $jne .create_textures_loop
+        $jne .create_uavs_loop
 
 
         ; load CS
@@ -120,45 +120,72 @@ mipgen_record_commands:
         $push r12 r13 rsi rdi
         $sub rsp, .k_stack_size
   virtual at rsp
-  rept 8 n { .param#n dq ? }
+  rept 8 n:1 { .param#n dq ? }
+  .texture dq ?
+  .cmdlist dq ?
   rept 5 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
   dalign 8
   .texture_desc D3D12_RESOURCE_DESC
+  dalign 8
+  .srv_desc D3D12_SHADER_RESOURCE_VIEW_DESC
   dalign 32
   .k_stack_size = $-$$+24
   end virtual
+        $zeroStack .k_stack_size
 
         $mov r12, rcx
   virtual at r12
   .mipgen mipmap_generator
   end virtual
 
-        $mov r13, rdx
-  virtual at r13
-  .cmdlist dq ?
-  end virtual
-
-        $zeroStack .k_stack_size
+        ; save function inputs on the stack
+        $mov [.cmdlist], rdx
+        $mov [.texture], r8
 
         $mov rcx, r8
         $lea rdx, [.texture_desc]
         $comcall ID3D12Resource.GetDesc
 
+        $d3d12EncodeShader4ComponentMapping [.srv_desc.Shader4ComponentMapping], 0, 1, 2, 3
+        $mov [.srv_desc.Format], DXGI_FORMAT_B8G8R8A8_UNORM
+        $mov [.srv_desc.ViewDimension], D3D12_SRV_DIMENSION_TEXTURE2D
+        $mov [.srv_desc.Texture2D.MipLevels], -1
 
-  match = 1, DEBUG {
-  local ..print, ..txt_fmt
-        $jmp ..print
-  ..txt_fmt db 'width: %d  height: %d', 0
-  ..print:
+        $mov rcx, [glob.device]
+        $mov rdx, [.texture]
+        $lea r8, [.srv_desc]
+        $mov r9, [.mipgen.dheap_cpu_start]
+        $comcall ID3D12Device.CreateShaderResourceView
+
+        $mov rcx, [.cmdlist]
+        $mov rdx, [.mipgen.pso]
+        $comcall ID3D12GraphicsCommandList.SetPipelineState
+
+        $mov rcx, [.cmdlist]
+        $mov rdx, [.mipgen.rootsig]
+        $comcall ID3D12GraphicsCommandList.SetComputeRootSignature
+
+        $mov rcx, [.cmdlist]
+        $mov edx, 1
+        $mov r8, [.mipgen.dheap_gpu_start]
+        $comcall ID3D12GraphicsCommandList.SetComputeRootDescriptorTable
+
+
+match = 1, DEBUG {
+  local ..txt_fmt, ..end
         $lea rcx, [output_debug_string]
         $lea rdx, [..txt_fmt]
         $mov r8, [.texture_desc.Width]
         $mov r9d, [.texture_desc.Height]
         $icall wsprintf
         $lea rcx, [output_debug_string]
-        $icall OutputDebugString }
+        $icall OutputDebugString
+        $jmp ..end
+        ..txt_fmt db 'eneida: width: %d  height: %d', 0
+        ..end: }
 
 
         $add rsp, .k_stack_size
         $pop rdi rsi r12 r13
         $ret
+;=============================================================================

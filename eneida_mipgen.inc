@@ -7,20 +7,19 @@ mipgen_init:
 ;-----------------------------------------------------------------------------
         $push r12 rsi
         $sub rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 8 n { .param#n dq ? }
-  dalign 8
-  .upload_heap_props D3D12_HEAP_PROPERTIES
-  dalign 8
-  .texture_desc D3D12_RESOURCE_DESC
-  dalign 8
-  .uav_desc D3D12_UNORDERED_ACCESS_VIEW_DESC
-  dalign 8
-  .pso_desc D3D12_COMPUTE_PIPELINE_STATE_DESC
+
+  $da8 .upload_heap_props       D3D12_HEAP_PROPERTIES
+  $da8 .texture_desc            D3D12_RESOURCE_DESC
+  $da8 .uav_desc                D3D12_UNORDERED_ACCESS_VIEW_DESC
+  $da8 .pso_desc                D3D12_COMPUTE_PIPELINE_STATE_DESC
+
   dalign 32
   .k_stack_size = $-$$+8
   end virtual
-
+  ;************************************;
         $mov r12, rcx
   virtual at r12
   .mipgen mipmap_generator
@@ -117,20 +116,30 @@ mipgen_init:
 falign
 mipgen_record_commands:
 ;-----------------------------------------------------------------------------
-        $push r12 r13 rsi rdi
+        $push r12 rbx rsi rdi
         $sub rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 8 n:1 { .param#n dq ? }
-  .texture dq ?
-  .cmdlist dq ?
+
+  .texture              dq ?
+  .cmdlist              dq ?
+  .total_num_mips       dd ?                    ; total number of mipmaps to generate
+  .num_mips             dd ?                    ; number of mipmaps to generate in current iteration
+  .src_mip              dd ?, ?
+
   rept 5 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
-  dalign 8
-  .texture_desc D3D12_RESOURCE_DESC
-  dalign 8
-  .srv_desc D3D12_SHADER_RESOURCE_VIEW_DESC
+
+  $da8 .texture_desc    D3D12_RESOURCE_DESC
+  $da8 .srv_desc        D3D12_SHADER_RESOURCE_VIEW_DESC
+  $da8 .copy_src        D3D12_TEXTURE_COPY_LOCATION
+  $da8 .copy_dst        D3D12_TEXTURE_COPY_LOCATION
+  $da8 .src_box         D3D12_BOX
+
   dalign 32
   .k_stack_size = $-$$+24
   end virtual
+  ;************************************;
         $zeroStack .k_stack_size
 
         $mov r12, rcx
@@ -147,7 +156,7 @@ mipgen_record_commands:
         $comcall ID3D12Resource.GetDesc
 
         $d3d12EncodeShader4ComponentMapping [.srv_desc.Shader4ComponentMapping], 0, 1, 2, 3
-        $mov [.srv_desc.Format], DXGI_FORMAT_B8G8R8A8_UNORM
+        $mov [.srv_desc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
         $mov [.srv_desc.ViewDimension], D3D12_SRV_DIMENSION_TEXTURE2D
         $mov [.srv_desc.Texture2D.MipLevels], -1
 
@@ -170,6 +179,155 @@ mipgen_record_commands:
         $mov r8, [.mipgen.dheap_gpu_start]
         $comcall ID3D12GraphicsCommandList.SetComputeRootDescriptorTable
 
+        $movzx eax, word[.texture_desc.MipLevels]
+        $sub eax, 1
+        $mov [.total_num_mips], eax
+        $mov [.src_mip], 0
+
+  .generation_loop:
+        ; compute number of mipmaps to generate in this iteration
+        $mov edx, 4                     ; edx = 4
+        $mov eax, [.total_num_mips]
+        $cmp eax, edx
+        $cmova eax, edx
+        $test eax, eax
+        $jz .generation_loop_end
+        $mov [.num_mips], eax
+
+        $mov rcx, [.cmdlist]
+        $mov edx, 0
+        $mov r8d, [.src_mip]
+        $mov r9d, 0
+        $comcall ID3D12GraphicsCommandList.SetComputeRoot32BitConstant
+
+        $mov rcx, [.cmdlist]
+        $mov edx, 0
+        $mov r8d, [.num_mips]
+        $mov r9d, 1
+        $comcall ID3D12GraphicsCommandList.SetComputeRoot32BitConstant
+
+        $mov ecx, [.src_mip]
+        $add ecx, 4
+        $mov edx, dword[.texture_desc.Width]
+        $shr edx, cl
+        $mov r8d, [.texture_desc.Height]
+        $shr r8d, cl
+        $mov r9d, 1
+        $mov rcx, [.cmdlist]
+        $comcall ID3D12GraphicsCommandList.Dispatch
+
+
+        $lea rbx, [.barrier0]
+  virtual at rbx
+  .barrier_i D3D12_RESOURCE_BARRIER
+  end virtual
+
+        $lea rsi, [.mipgen.mip_textures]
+  virtual at rsi
+  .mip_texture_i dq ?
+  end virtual
+
+        $xor ecx, ecx
+  @@:   $mov [.barrier_i.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
+        $mov [.barrier_i.Transition.pResource], rax, [.mip_texture_i]
+        $mov [.barrier_i.Transition.StateBefore], D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        $mov [.barrier_i.Transition.StateAfter], D3D12_RESOURCE_STATE_COPY_SOURCE
+        $mov [.barrier_i.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
+        $add rbx, sizeof.D3D12_RESOURCE_BARRIER
+        $add rsi, 8
+        $add ecx, 1
+        $cmp ecx, 4
+        $jne @b
+        $mov [.barrier_i.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
+        $mov [.barrier_i.Transition.pResource], rax, [.texture]
+        $mov [.barrier_i.Transition.StateBefore], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+        $mov [.barrier_i.Transition.StateAfter], D3D12_RESOURCE_STATE_COPY_DEST
+        $mov [.barrier_i.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
+
+        $mov rcx, [.cmdlist]
+        $mov edx, 5
+        $lea r8, [.barrier0]
+        $comcall ID3D12GraphicsCommandList.ResourceBarrier
+
+
+        $lea rsi, [.mipgen.mip_textures]
+        $xor ebx, ebx
+  .copy_loop:
+        $lea rcx, [.copy_dst]
+        $mov edx, sizeof.D3D12_TEXTURE_COPY_LOCATION
+        $icall RtlZeroMemory
+
+        $lea rcx, [.copy_src]
+        $mov edx, sizeof.D3D12_TEXTURE_COPY_LOCATION
+        $icall RtlZeroMemory
+
+        $mov [.copy_dst.pResource], rdx, [.texture]
+        $mov [.copy_dst.Type], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX
+        $mov eax, [.src_mip]
+        $add eax, 1
+        $add eax, ebx
+        $mov [.copy_dst.SubresourceIndex], eax
+
+        $mov [.copy_src.pResource], rdx, [.mip_texture_i]
+        $mov [.copy_src.Type], D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX
+        $mov [.copy_src.SubresourceIndex], 0
+
+        $mov ecx, [.copy_dst.SubresourceIndex]
+        $mov eax, dword[.texture_desc.Width]
+        $shr eax, cl
+        $mov [.src_box.right], eax
+        $mov eax, [.texture_desc.Height]
+        $shr eax, cl
+        $mov [.src_box.bottom], eax
+        $mov [.src_box.back], 1
+
+        $mov rcx, [.cmdlist]
+        $lea rdx, [.copy_dst]
+        $mov r8d, 0
+        $mov r9d, 0
+        $mov [.param5], 0
+        $lea [.param6], rax, [.copy_src]
+        $lea [.param7], rax, [.src_box]
+        $comcall ID3D12GraphicsCommandList.CopyTextureRegion
+
+        $add rsi, 8
+        $add ebx, 1
+        $cmp ebx, [.num_mips]
+        $jne .copy_loop
+
+
+        $lea rbx, [.barrier0]
+        $lea rsi, [.mipgen.mip_textures]
+
+        $xor ecx, ecx
+  @@:   $mov [.barrier_i.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
+        $mov [.barrier_i.Transition.pResource], rax, [.mip_texture_i]
+        $mov [.barrier_i.Transition.StateBefore], D3D12_RESOURCE_STATE_COPY_SOURCE
+        $mov [.barrier_i.Transition.StateAfter], D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+        $mov [.barrier_i.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
+        $add rbx, sizeof.D3D12_RESOURCE_BARRIER
+        $add rsi, 8
+        $add ecx, 1
+        $cmp ecx, 4
+        $jne @b
+        $mov [.barrier_i.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
+        $mov [.barrier_i.Transition.pResource], rax, [.texture]
+        $mov [.barrier_i.Transition.StateBefore], D3D12_RESOURCE_STATE_COPY_DEST
+        $mov [.barrier_i.Transition.StateAfter], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+        $mov [.barrier_i.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
+
+        $mov rcx, [.cmdlist]
+        $mov edx, 5
+        $lea r8, [.barrier0]
+        $comcall ID3D12GraphicsCommandList.ResourceBarrier
+
+
+        $mov eax, [.num_mips]
+        $sub [.total_num_mips], eax
+        $add [.src_mip], eax
+        $jmp .generation_loop
+  .generation_loop_end:
+
 
 match = 1, DEBUG {
   local ..txt_fmt, ..end
@@ -186,6 +344,6 @@ match = 1, DEBUG {
 
 
         $add rsp, .k_stack_size
-        $pop rdi rsi r12 r13
+        $pop rdi rsi r12 rbx
         $ret
 ;=============================================================================

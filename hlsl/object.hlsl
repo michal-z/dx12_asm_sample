@@ -41,7 +41,7 @@ SamplerState g_sampler : register(s0);
 [RootSignature(rs)]
 float4 object_ps(vs_out i) : SV_Target0
 {
-  return g_texture.SampleLevel(g_sampler, i.texcoord, 0.0f);
+  return g_texture.Sample(g_sampler, i.texcoord);
 }
 
 

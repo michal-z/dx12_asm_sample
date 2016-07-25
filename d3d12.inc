@@ -264,6 +264,14 @@ struc D3D12_VIEWPORT {
 
 D3D12_RECT fix RECT
 
+struc D3D12_BOX {
+  .left dd ?
+  .top dd ?
+  .front dd ?
+  .right dd ?
+  .bottom  dd ?
+  .back  dd ? }
+
 struc D3D12_COMMAND_QUEUE_DESC {
   .Type dd ?
   .Priority dd ?
@@ -580,6 +588,7 @@ struc D3D12_TEXTURE_COPY_LOCATION {
   virtual at .PlacedFootprint
   .SubresourceIndex dd ?
   end virtual }
+struc_offsets_size D3D12_TEXTURE_COPY_LOCATION
 
 D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_0 = 0
 D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_1 = 1

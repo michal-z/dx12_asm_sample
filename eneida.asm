@@ -95,6 +95,10 @@ macro emit [inst] {
   forward
         inst }
 
+macro $da8 decl* {
+  dalign 8
+  decl }
+
 macro $iacaBegin {
         $mov ebx, 111
         db 0x64, 0x67, 0x90 }

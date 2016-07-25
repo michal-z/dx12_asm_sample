@@ -12,5 +12,5 @@ DirectX 12 demo coded in assembly language (wip). Requires AVX2 capable CPU and 
 - [x] Implement efficient frame buffering method
 - [x] Implement basic math module
 - [x] Implement loading textures from file (only BGRA8 TGA)
-- [ ] Implement mipmaps generation in compute shader
+- [x] Implement mipmaps generation in compute shader
 - [ ] Implement loading meshes from file (native Asset Import Library file format)

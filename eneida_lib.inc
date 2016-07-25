@@ -293,7 +293,7 @@ create_texture_from_file:
         $mov [.texture_desc.Height], eax, [.image_height]
         $mov [.texture_desc.DepthOrArraySize], 1
         $mov [.texture_desc.MipLevels], 0
-        $mov [.texture_desc.Format], DXGI_FORMAT_B8G8R8A8_UNORM
+        $mov [.texture_desc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
         $mov [.texture_desc.SampleDesc.Count], 1
         $mov [.texture_desc.Layout], D3D12_TEXTURE_LAYOUT_UNKNOWN
 

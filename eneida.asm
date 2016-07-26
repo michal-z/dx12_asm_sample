@@ -413,13 +413,17 @@ check_cpu_extensions:
 falign
 update_frame_stats:
 ;-----------------------------------------------------------------------------
+        sub         rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
-  rq 4
+  rept 4 n { .param#n dq ? }
+
   .text rb 64
+
   dalign 32
   .k_stack_size = $-$$+24
   end virtual
-        sub         rsp, .k_stack_size
+  ;************************************;
         mov         rax, [.prev_time]
         test        rax, rax
         jnz         @f
@@ -465,19 +469,20 @@ update_frame_stats:
 falign
 init_window:
 ;-----------------------------------------------------------------------------
+        push        rsi
+        sub         rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 12 n { .param#n dq ? }
+
   da8 .wc   WNDCLASS
   da8 .rect RECT
+
   dalign 32
   .k_stack_size = $-$$+16
   end virtual
-        push rsi
-
-        ; alloc and clear the stack
-        sub         rsp, .k_stack_size
+  ;************************************;
         zeroStack   .k_stack_size
-
         ; create window class
         lea         [.wc.lpfnWndProc], rax, [winproc]
         lea         [.wc.lpszClassName], rax, [k_win_class_name]
@@ -492,7 +497,6 @@ init_window:
         icall       RegisterClass
         test        eax, eax
         jz          .error
-
         ; compute window size
         mov         [.rect.right], eax, [glob.win_width]
         mov         [.rect.bottom], eax, [glob.win_height]
@@ -504,7 +508,6 @@ init_window:
         mov         r11d, [.rect.bottom]
         sub         r10d, [.rect.left]
         sub         r11d, [.rect.top]
-
         ; create window
         xor         ecx, ecx
         lea         rdx, [k_win_class_name]
@@ -522,7 +525,6 @@ init_window:
         mov         [glob.win_handle], rax
         test        rax, rax
         jz          .error
-
         ; success
         mov         eax, 1
         jmp         .return
@@ -538,28 +540,23 @@ init:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
         sub         rsp, .k_stack_size
-
         ; check cpu
         call        check_cpu_extensions
         test        eax, eax
         jz          .error
-
         ; get process heap
         icall       GetProcessHeap
         mov         [glob.process_heap], rax
         test        rax, rax
         jz          .error
-
         ; create window
         call        init_window
         test        eax, eax
         jz          .error
-
         ; init demo
         call        demo_init
         test        eax, eax
         jz          .error
-
         ; success
         mov         eax, 1
         jmp         .return
@@ -594,12 +591,17 @@ start:
 ;-----------------------------------------------------------------------------
         and         rsp, -32
         sub         rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
+
   rept 5 n { .param#n dq ? }
+
   .msg MSG
+
   dalign 32
   .k_stack_size = $-$$
   end virtual
+  ;************************************;
         call        init
         test        eax, eax
         jz          .quit

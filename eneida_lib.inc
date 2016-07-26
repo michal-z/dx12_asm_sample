@@ -4,14 +4,18 @@
 falign
 load_file:
 ;-----------------------------------------------------------------------------
+        push        rdi rsi rbx
+        sub         rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 7 n { .param#n dq ? }
+
   .bytes_read dd ?
+
   dalign 32
   .k_stack_size = $-$$
   end virtual
-        push        rdi rsi rbx
-        sub         rsp, .k_stack_size
+  ;************************************;
         xor         esi, esi                                   ; rsi - file handle
         xor         edi, edi                                   ; rdi - memory pointer
 
@@ -97,16 +101,18 @@ falign
 create_buffer:
 ;-----------------------------------------------------------------------------
         sub rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 8 n { .param#n dq ? }
-  .buffer dq ?
-  dalign 8
-  .upload_heap_props D3D12_HEAP_PROPERTIES
-  dalign 8
-  .buffer_res_desc D3D12_RESOURCE_DESC
+
+  .buffer                dq ?
+  da8 .upload_heap_props D3D12_HEAP_PROPERTIES
+  da8 .buffer_res_desc   D3D12_RESOURCE_DESC
+
   dalign 32
   .k_stack_size = $-$$+24
   end virtual
+  ;************************************;
         zeroStack   .k_stack_size
 
         mov         [.upload_heap_props.Type], edx             ; D3D12_HEAP_TYPE_*
@@ -144,14 +150,18 @@ falign
 create_upload_buffer:
 ;-----------------------------------------------------------------------------
         sub         rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 4 n { .param#n dq ? }
-  .buffer dq ?
-  .addr dq ?
+
+  .buffer      dq ?
+  .addr        dq ?
   .empty_range D3D12_RANGE
+
   dalign 32
   .k_stack_size = $-$$+24
   end virtual
+  ;************************************;
         zeroStack   .k_stack_size
 
         mov         edx, D3D12_HEAP_TYPE_UPLOAD
@@ -185,7 +195,6 @@ wait_for_gpu:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
         sub         rsp, .k_stack_size
-
         add         [glob.cpu_completed_fences], 1
 
         mov         rcx, [glob.cmdqueue]
@@ -211,13 +220,16 @@ falign
 get_upload_buffer:
 ;-----------------------------------------------------------------------------
         sub         rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 4 n { .param#n dq ? }
+
   .index dd ?, ?
+
   dalign 32
   .k_stack_size = $-$$+24
   end virtual
-
+  ;************************************;
         mov         eax, 1
         lock xadd   [glob.upload_buffers_count], eax
         cmp         eax, k_upload_buffers_count

@@ -4,21 +4,24 @@ scene1_init:
 ;-----------------------------------------------------------------------------
         $push rsi rbx
         $sub rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 6 n { .param#n dq ? }
-  dalign 8
-  .pso_desc D3D12_GRAPHICS_PIPELINE_STATE_DESC
+
   dalign 8
   rept 2 n:0 { .input_element_desc#n D3D12_INPUT_ELEMENT_DESC }
+
   dalign 8
   rept 2 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
-  dalign 8
-  .srv_desc D3D12_SHADER_RESOURCE_VIEW_DESC
-  dalign 8
-  .mipgen mipmap_generator
+
+  $da8 .srv_desc        D3D12_SHADER_RESOURCE_VIEW_DESC
+  $da8 .pso_desc        D3D12_GRAPHICS_PIPELINE_STATE_DESC
+  $da8 .mipgen          mipmap_generator
+
   dalign 32
   .k_stack_size = $-$$+8
   end virtual
+  ;************************************;
         $zeroStack .k_stack_size
 
         ; init transition barriers
@@ -26,7 +29,6 @@ scene1_init:
         $mov [.barrier0.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
         $mov [.barrier1.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
         $mov [.barrier1.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
-
 
 
         ; create vertex buffer
@@ -231,23 +233,28 @@ scene1_update:
 ;-----------------------------------------------------------------------------
         $push rsi rdi r12
         $sub rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 6 n { .param#n dq ? }
-  .barrier D3D12_RESOURCE_BARRIER
-  dalign 8
-  .back_buffer_handle dq ?
+
+  .back_buffer_handle   dq ?
+
+  $da8 .barrier         D3D12_RESOURCE_BARRIER
+
   dalign 32
-  .matrix: rd 16
+  .matrix:              rd 16
+
   dalign 32
   .k_stack_size = $-$$
   end virtual
 
+  virtual at r12
+  .frame_res            frame_resources
+  end virtual
+  ;************************************;
         $mov r12d, [glob.frame_index]
         $imul r12d, sizeof.frame_resources
         $lea r12, [r12+glob.frame_res0]
-  virtual at r12
-  .frame_res frame_resources
-  end virtual
 
         ; init transition barrier
         $mov [.barrier.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION

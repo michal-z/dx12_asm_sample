@@ -160,9 +160,11 @@ macro $safeRelease iface* {
   .end: }
 
 macro $transitionBarrier ptr*, res*, sbefore*, safter* {
+        $mov [ptr+D3D12_RESOURCE_BARRIER.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
         $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.pResource], rax, res
         $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.StateBefore], sbefore
-        $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.StateAfter], safter }
+        $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.StateAfter], safter
+        $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES }
 
 macro $mov op1*, op2*, op3 {
   if op3 eq

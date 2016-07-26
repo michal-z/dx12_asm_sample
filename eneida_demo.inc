@@ -4,21 +4,25 @@ demo_init:
 ;-----------------------------------------------------------------------------
         $push rsi rbx
         $sub rsp, .k_stack_size
+  ;************************************;
   virtual at rsp
   rept 7 n { .param#n dq ? }
-  .dbgi dq ?
-  .swapchain dq ?
-  dalign 8
-  .cmdqueue_desc D3D12_COMMAND_QUEUE_DESC
-  dalign 8
-  .swapchain_desc DXGI_SWAP_CHAIN_DESC
-  dalign 8
-  .rtv_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
-  dalign 8
-  .descriptor_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
+
+  .dbgi                         dq ?
+  .swapchain                    dq ?
+  $da8 .cmdqueue_desc           D3D12_COMMAND_QUEUE_DESC
+  $da8 .swapchain_desc          DXGI_SWAP_CHAIN_DESC
+  $da8 .rtv_heap_desc           D3D12_DESCRIPTOR_HEAP_DESC
+  $da8 .descriptor_heap_desc    D3D12_DESCRIPTOR_HEAP_DESC
+
   dalign 32
   .k_stack_size = $-$$+8
   end virtual
+
+  virtual at rbx
+  .frame_res_i                  frame_resources
+  end virtual
+  ;************************************;
         $zeroStack .k_stack_size
 
         ; debug layer
@@ -147,47 +151,43 @@ demo_init:
         $mov [.descriptor_heap_desc.NumDescriptors], k_max_descriptors_count
         $mov [.descriptor_heap_desc.Flags], D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE
 
-        $lea rbx, [glob.frame_res0]
-  virtual at rbx
-  .frame_res frame_resources
-  end virtual
-
+        $lea rbx, [glob.frame_res0]     ; rbx = .frame_res_i
   .frame_resources_loop:
         ; create command allocator
         $mov rcx, [glob.device]
         $mov edx, D3D12_COMMAND_LIST_TYPE_DIRECT
         $lea r8, [IID_ID3D12CommandAllocator]
-        $lea r9, [.frame_res.cmdalloc]
+        $lea r9, [.frame_res_i.cmdalloc]
         $comcall ID3D12Device.CreateCommandAllocator
         $checkhr eax, .error
 
         ; create constant buffer
         $mov ecx, 1024
         $call create_upload_buffer
-        $mov [.frame_res.constant_buffer], rax
-        $mov [.frame_res.constant_buffer_addr], rdx
+        $mov [.frame_res_i.constant_buffer], rax
+        $mov [.frame_res_i.constant_buffer_addr], rdx
 
-        $mov rcx, [.frame_res.constant_buffer]
+        $mov rcx, [.frame_res_i.constant_buffer]
         $comcall ID3D12Resource.GetGPUVirtualAddress
-        $mov [.frame_res.constant_buffer_view], rax
+        $mov [.frame_res_i.constant_buffer_view], rax
 
         ; create descriptor heap
         $mov rcx, [glob.device]
         $lea rdx, [.descriptor_heap_desc]
         $lea r8, [IID_ID3D12DescriptorHeap]
-        $lea r9, [.frame_res.dheap]
+        $lea r9, [.frame_res_i.dheap]
         $comcall ID3D12Device.CreateDescriptorHeap
         $checkhr eax, .error
 
-        $mov rcx, [.frame_res.dheap]
-        $lea rdx, [.frame_res.dheap_cpu_start]
+        $mov rcx, [.frame_res_i.dheap]
+        $lea rdx, [.frame_res_i.dheap_cpu_start]
         $comcall ID3D12DescriptorHeap.GetCPUDescriptorHandleForHeapStart
-        $mov [.frame_res.dheap_cpu_start], rax, [rax]
+        $mov [.frame_res_i.dheap_cpu_start], rax, [rax]
 
-        $mov rcx, [.frame_res.dheap]
-        $lea rdx, [.frame_res.dheap_gpu_start]
+        $mov rcx, [.frame_res_i.dheap]
+        $lea rdx, [.frame_res_i.dheap_gpu_start]
         $comcall ID3D12DescriptorHeap.GetGPUDescriptorHandleForHeapStart
-        $mov [.frame_res.dheap_gpu_start], rax, [rax]
+        $mov [.frame_res_i.dheap_gpu_start], rax, [rax]
 
 
         $add rbx, sizeof.frame_resources
@@ -238,7 +238,7 @@ demo_init:
         $mov rcx, [glob.device]
         $mov edx, 0
         $mov r8d, D3D12_COMMAND_LIST_TYPE_DIRECT
-        $mov r9, [.frame_res.cmdalloc]
+        $mov r9, [.frame_res_i.cmdalloc]
         $mov [.param5], 0
         $lea [.param6], rax, [IID_ID3D12GraphicsCommandList]
         $lea [.param7], rax, [glob.cmdlist]

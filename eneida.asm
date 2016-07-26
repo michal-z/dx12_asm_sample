@@ -86,7 +86,7 @@ IUnknown:
   .Release rq 1
 end virtual
 
-include '$instructions.inc'
+;include '$instructions.inc'
 include 'd3d12.inc'
 ;========================================================================
 DEBUG equ 1
@@ -95,21 +95,21 @@ macro emit [inst] {
   forward
         inst }
 
-macro $da8 decl* {
+macro da8 decl* {
   dalign 8
   decl }
 
-macro $iacaBegin {
-        $mov ebx, 111
-        db 0x64, 0x67, 0x90 }
+macro iacaBegin {
+        mov         ebx, 111
+        db          0x64, 0x67, 0x90 }
 
-macro $iacaEnd {
-        $mov ebx, 222
-        db 0x64, 0x67, 0x90 }
+macro iacaEnd {
+        mov         ebx, 222
+        db          0x64, 0x67, 0x90 }
 
-macro $debugBreak {
-        $int3
-        $nop }
+macro debugBreak {
+        int3
+        nop }
 
 macro falign { align 32 }
 
@@ -117,88 +117,88 @@ macro dalign value* {
   rb (value - 1) - (($-$$) + (value - 1)) mod value }
 
 
-macro $comcall target* {
-        $mov rax, [rcx]
-        $call [rax+target] }
+macro comcall target* {
+        mov         rax, [rcx]
+        call        [rax+target] }
 
-macro $icall target* {
-        $call [target] }
+macro icall target* {
+        call        [target] }
 
-macro $malloc size* {
-        $mov rcx, [glob.process_heap]
-        $xor edx, edx
-        $mov r8d, size
-        $icall HeapAlloc }
+macro malloc size* {
+        mov         rcx, [glob.process_heap]
+        xor         edx, edx
+        mov         r8d, size
+        icall       HeapAlloc }
 
-macro $free ptr* {
+macro free ptr* {
   local ..end
-        $mov r8, ptr
-        $test r8, r8
-        $jz ..end
-        $mov rcx, [glob.process_heap]
-        $xor edx, edx
-        $icall HeapFree
+        mov         r8, ptr
+        test        r8, r8
+        jz          ..end
+        mov         rcx, [glob.process_heap]
+        xor         edx, edx
+        icall       HeapFree
   ..end: }
 
-macro $safeClose handle* {
+macro safeClose handle* {
   local .end
-        $mov rcx, handle
-        $test rcx, rcx
-        $jz .end
-        $icall CloseHandle
-        $mov handle, 0
+        mov         rcx, handle
+        test        rcx, rcx
+        jz          .end
+        icall       CloseHandle
+        mov         handle, 0
   .end: }
 
-macro $safeRelease iface* {
-  local .end
-        $mov rcx, iface
-        $test rcx, rcx
-        $jz .end
-        $mov rax, [rcx]
-        $call [IUnknown.Release+rax]
-        $mov iface, 0
-  .end: }
+macro safeRelease iface* {
+  local ..end
+        mov         rcx, iface
+        test        rcx, rcx
+        jz          ..end
+        mov         rax, [rcx]
+        call        [IUnknown.Release+rax]
+        mov         iface, 0
+  ..end: }
 
-macro $transitionBarrier ptr*, res*, sbefore*, safter* {
-        $mov [ptr+D3D12_RESOURCE_BARRIER.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
-        $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.pResource], rax, res
-        $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.StateBefore], sbefore
-        $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.StateAfter], safter
-        $mov [ptr+D3D12_RESOURCE_BARRIER.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES }
+macro transitionBarrier ptr*, res*, sbefore*, safter* {
+        mov         [ptr+D3D12_RESOURCE_BARRIER.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
+        mov         [ptr+D3D12_RESOURCE_BARRIER.Transition.pResource], rax, res
+        mov         [ptr+D3D12_RESOURCE_BARRIER.Transition.StateBefore], sbefore
+        mov         [ptr+D3D12_RESOURCE_BARRIER.Transition.StateAfter], safter
+        mov         [ptr+D3D12_RESOURCE_BARRIER.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES }
 
-macro $mov op1*, op2*, op3 {
+macro mov op1*, op2*, op3 {
   if op3 eq
-        $mov op1, op2
+        mov         op1, op2
   else
-        $mov op2, op3
-        $mov op1, op2
+        mov         op2, op3
+        mov         op1, op2
   end if }
 
-macro $lea op1*, op2*, op3 {
+macro lea op1*, op2*, op3 {
   if op3 eq
-        $lea op1, op2
+        lea         op1, op2
   else
-        $lea op2, op3
-        $mov op1, op2
+        lea         op2, op3
+        mov         op1, op2
   end if }
 
-macro $zeroStack size* {
-        $vpxor ymm0, ymm0, ymm0
-        $xor eax, eax
-  @@:   $vmovdqa [rsp+rax], ymm0
-        $add eax, 32
-        $cmp eax, 32*(size/32)
-        $jne @b }
+macro zeroStack size* {
+        vpxor       ymm0, ymm0, ymm0
+        xor         eax, eax
+  @@:   vmovdqa     [rsp+rax], ymm0
+        add         eax, 32
+        cmp         eax, 32*(size/32)
+        jne         @b }
 
-macro $checkhr res*, err* {
-        $test res, res
-        $js err }
+macro checkhr res*, err* {
+        test        res, res
+        js          err }
 
-macro $vshufps d*, s0*, s1*, fp3*, fp2, fp1, fp0 {
+macro vshufps d*, s0*, s1*, fp3*, fp2, fp1, fp0 {
   if fp2 eq
-        $vshufps d, s0, s1, fp3
+        vshufps     d, s0, s1, fp3
   else
-        $vshufps d, s0, s1, (fp3 shl 6) or (fp2 shl 4) or (fp1 shl 2) or fp0
+        vshufps     d, s0, s1, (fp3 shl 6) or (fp2 shl 4) or (fp1 shl 2) or fp0
   end if }
 
 
@@ -388,27 +388,27 @@ include 'eneida_mipgen.inc'
 falign
 check_cpu_extensions:
 ;-----------------------------------------------------------------------------
-        $mov eax, 1
-        $cpuid
-        $and ecx, 0x58001000          ; check RDRAND,AVX,OSXSAVE,FMA
-        $cmp ecx, 0x58001000
-        $jne .not_supported
-        $mov eax, 7
-        $xor ecx, ecx
-        $cpuid
-        $and ebx, 0x20                ; check AVX2
-        $cmp ebx, 0x20
-        $jne .not_supported
-        $xor ecx, ecx
-        $xgetbv
-        $and eax, 0x6                 ; check OS support
-        $cmp eax, 0x6
-        $jne .not_supported
-        $mov eax, 1
-        $ret
+        mov         eax, 1
+        cpuid
+        and         ecx, 0x58001000          ; check RDRAND, AVX, OSXSAVE, FMA
+        cmp         ecx, 0x58001000
+        jne         .not_supported
+        mov         eax, 7
+        xor         ecx, ecx
+        cpuid
+        and         ebx, 0x20                ; check AVX2
+        cmp         ebx, 0x20
+        jne         .not_supported
+        xor         ecx, ecx
+        xgetbv
+        and         eax, 0x6                 ; check OS support
+        cmp         eax, 0x6
+        jne         .not_supported
+        mov         eax, 1
+        ret
   .not_supported:
-        $xor eax, eax
-        $ret
+        xor         eax, eax
+        ret
 ;=============================================================================
 falign
 update_frame_stats:
@@ -419,242 +419,241 @@ update_frame_stats:
   dalign 32
   .k_stack_size = $-$$+24
   end virtual
-        $sub rsp, .k_stack_size
-        $mov rax, [.prev_time]
-        $test rax, rax
-        $jnz @f
+        sub         rsp, .k_stack_size
+        mov         rax, [.prev_time]
+        test        rax, rax
+        jnz         @f
 
-        $call get_time
-        $vmovsd [.prev_time], xmm0
-        $vmovsd [.prev_update_time], xmm0
+        call        get_time
+        vmovsd      [.prev_time], xmm0
+        vmovsd      [.prev_update_time], xmm0
 
-  @@:   $call get_time                          ; xmm0 = (0,time)
-        $vmovsd [glob.time], xmm0
-        $vsubsd xmm1, xmm0, [.prev_time]        ; xmm1 = (0,time_delta)
-        $vmovsd [.prev_time], xmm0
-        $vxorps xmm2, xmm2, xmm2
-        $vcvtsd2ss xmm1, xmm2, xmm1             ; xmm1 = (0,0,0,time_delta)
-        $vmovss [glob.time_delta], xmm1
-        $vmovsd xmm1, [.prev_update_time]       ; xmm1 = (0,prev_update_time)
-        $vsubsd xmm2, xmm0, xmm1                ; xmm2 = (0,time-prev_update_time)
-        $vcomisd xmm2, [k_f64_1_0]
-        $jb @f
+  @@:   call        get_time                          ; xmm0 = (0,time)
+        vmovsd      [glob.time], xmm0
+        vsubsd      xmm1, xmm0, [.prev_time]        ; xmm1 = (0,time_delta)
+        vmovsd      [.prev_time], xmm0
+        vxorps      xmm2, xmm2, xmm2
+        vcvtsd2ss   xmm1, xmm2, xmm1             ; xmm1 = (0,0,0,time_delta)
+        vmovss      [glob.time_delta], xmm1
+        vmovsd      xmm1, [.prev_update_time]       ; xmm1 = (0,prev_update_time)
+        vsubsd      xmm2, xmm0, xmm1                ; xmm2 = (0,time-prev_update_time)
+        vcomisd     xmm2, [k_f64_1_0]
+        jb          @f
 
-        $vmovsd [.prev_update_time], xmm0
-        $mov eax, [.frame]
-        $vxorpd xmm1, xmm1, xmm1
-        $vcvtsi2sd xmm1, xmm1, eax              ; xmm1 = (0,frame)
-        $vdivsd xmm0, xmm1, xmm2                ; xmm0 = (0,frame/(time-prev_update_time))
-        $vdivsd xmm1, xmm2, xmm1
-        $vmulsd xmm1, xmm1, [k_f64_1000000_0]
-        $mov [.frame], 0
+        vmovsd      [.prev_update_time], xmm0
+        mov         eax, [.frame]
+        vxorpd      xmm1, xmm1, xmm1
+        vcvtsi2sd   xmm1, xmm1, eax              ; xmm1 = (0,frame)
+        vdivsd      xmm0, xmm1, xmm2                ; xmm0 = (0,frame/(time-prev_update_time))
+        vdivsd      xmm1, xmm2, xmm1
+        vmulsd      xmm1, xmm1, [k_f64_1000000_0]
+        mov         [.frame], 0
 
-        $lea rcx, [.text]
-        $lea rdx, [k_win_text_fmt]
-        $vcvtsd2si r8, xmm0
-        $vcvtsd2si r9, xmm1
-        $icall wsprintf
-        $mov rcx, [glob.win_handle]
-        $lea rdx, [.text]
-        $icall SetWindowText
+        lea         rcx, [.text]
+        lea         rdx, [k_win_text_fmt]
+        vcvtsd2si   r8, xmm0
+        vcvtsd2si   r9, xmm1
+        icall       wsprintf
+        mov         rcx, [glob.win_handle]
+        lea         rdx, [.text]
+        icall       SetWindowText
 
-  @@:   $add [.frame], 1
-        $add rsp, .k_stack_size
-        $ret
+  @@:   add         [.frame], 1
+        add         rsp, .k_stack_size
+        ret
 ;=============================================================================
 falign
 init_window:
 ;-----------------------------------------------------------------------------
   virtual at rsp
   rept 12 n { .param#n dq ? }
-  .wc WNDCLASS
-  dalign 8
-  .rect RECT
+  da8 .wc   WNDCLASS
+  da8 .rect RECT
   dalign 32
   .k_stack_size = $-$$+16
   end virtual
-        $push rsi
+        push rsi
 
         ; alloc and clear the stack
-        $sub rsp, .k_stack_size
-        $zeroStack .k_stack_size
+        sub         rsp, .k_stack_size
+        zeroStack   .k_stack_size
 
         ; create window class
-        $lea [.wc.lpfnWndProc], rax, [winproc]
-        $lea [.wc.lpszClassName], rax, [k_win_class_name]
-        $xor ecx, ecx
-        $icall GetModuleHandle
-        $mov [.wc.hInstance], rax
-        $xor ecx, ecx
-        $mov edx, IDC_ARROW
-        $icall LoadCursor
-        $mov [.wc.hCursor], rax
-        $lea rcx, [.wc]
-        $icall RegisterClass
-        $test eax, eax
-        $jz .error
+        lea         [.wc.lpfnWndProc], rax, [winproc]
+        lea         [.wc.lpszClassName], rax, [k_win_class_name]
+        xor         ecx, ecx
+        icall       GetModuleHandle
+        mov         [.wc.hInstance], rax
+        xor         ecx, ecx
+        mov         edx, IDC_ARROW
+        icall       LoadCursor
+        mov         [.wc.hCursor], rax
+        lea         rcx, [.wc]
+        icall       RegisterClass
+        test        eax, eax
+        jz          .error
 
         ; compute window size
-        $mov [.rect.right], eax, [glob.win_width]
-        $mov [.rect.bottom], eax, [glob.win_height]
-        $lea rcx, [.rect]
-        $mov edx, k_win_style
-        $xor r8d, r8d
-        $icall AdjustWindowRect
-        $mov r10d, [.rect.right]
-        $mov r11d, [.rect.bottom]
-        $sub r10d, [.rect.left]
-        $sub r11d, [.rect.top]
+        mov         [.rect.right], eax, [glob.win_width]
+        mov         [.rect.bottom], eax, [glob.win_height]
+        lea         rcx, [.rect]
+        mov         edx, k_win_style
+        xor         r8d, r8d
+        icall       AdjustWindowRect
+        mov         r10d, [.rect.right]
+        mov         r11d, [.rect.bottom]
+        sub         r10d, [.rect.left]
+        sub         r11d, [.rect.top]
 
         ; create window
-        $xor ecx, ecx
-        $lea rdx, [k_win_class_name]
-        $mov r8, rdx
-        $mov r9d, WS_VISIBLE+k_win_style
-        $mov dword[.param5], CW_USEDEFAULT
-        $mov dword[.param6], CW_USEDEFAULT
-        $mov dword[.param7], r10d
-        $mov dword[.param8], r11d
-        $mov [.param9], 0
-        $mov [.param10], 0
-        $mov [.param11], rax, [.wc.hInstance]
-        $mov [.param12], 0
-        $icall CreateWindowEx
-        $mov [glob.win_handle], rax
-        $test rax, rax
-        $jz .error
+        xor         ecx, ecx
+        lea         rdx, [k_win_class_name]
+        mov         r8, rdx
+        mov         r9d, WS_VISIBLE+k_win_style
+        mov         dword[.param5], CW_USEDEFAULT
+        mov         dword[.param6], CW_USEDEFAULT
+        mov         dword[.param7], r10d
+        mov         dword[.param8], r11d
+        mov         [.param9], 0
+        mov         [.param10], 0
+        mov         [.param11], rax, [.wc.hInstance]
+        mov         [.param12], 0
+        icall       CreateWindowEx
+        mov         [glob.win_handle], rax
+        test        rax, rax
+        jz          .error
 
         ; success
-        $mov eax, 1
-        $jmp .return
+        mov         eax, 1
+        jmp         .return
   .error:
-        $xor eax, eax
+        xor         eax, eax
   .return:
-        $add rsp, .k_stack_size
-        $pop rsi
-        $ret
+        add         rsp, .k_stack_size
+        pop         rsi
+        ret
 ;=============================================================================
 falign
 init:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
-        $sub rsp, .k_stack_size
+        sub         rsp, .k_stack_size
 
         ; check cpu
-        $call check_cpu_extensions
-        $test eax, eax
-        $jz .error
+        call        check_cpu_extensions
+        test        eax, eax
+        jz          .error
 
         ; get process heap
-        $icall GetProcessHeap
-        $mov [glob.process_heap], rax
-        $test rax, rax
-        $jz .error
+        icall       GetProcessHeap
+        mov         [glob.process_heap], rax
+        test        rax, rax
+        jz          .error
 
         ; create window
-        $call init_window
-        $test eax, eax
-        $jz .error
+        call        init_window
+        test        eax, eax
+        jz          .error
 
         ; init demo
-        $call demo_init
-        $test eax, eax
-        $jz .error
+        call        demo_init
+        test        eax, eax
+        jz          .error
 
         ; success
-        $mov eax, 1
-        $jmp .return
+        mov         eax, 1
+        jmp         .return
   .error:
-        $xor eax, eax
+        xor         eax, eax
   .return:
-        $add rsp, .k_stack_size
-        $ret
+        add         rsp, .k_stack_size
+        ret
 ;=============================================================================
 falign
 deinit:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
-        $sub rsp, .k_stack_size
-        $call wait_for_gpu
-        $call demo_deinit
-        $add rsp, .k_stack_size
-        $ret
+        sub         rsp, .k_stack_size
+        call        wait_for_gpu
+        call        demo_deinit
+        add         rsp, .k_stack_size
+        ret
 ;=============================================================================
 falign
 update:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
-        $sub rsp, .k_stack_size
-        $call update_frame_stats
-        $call demo_update
-        $add rsp, .k_stack_size
-        $ret
+        sub         rsp, .k_stack_size
+        call        update_frame_stats
+        call        demo_update
+        add         rsp, .k_stack_size
+        ret
 ;=============================================================================
 falign
 start:
 ;-----------------------------------------------------------------------------
-        $and rsp, -32
-        $sub rsp, .k_stack_size
+        and         rsp, -32
+        sub         rsp, .k_stack_size
   virtual at rsp
   rept 5 n { .param#n dq ? }
   .msg MSG
   dalign 32
   .k_stack_size = $-$$
   end virtual
-        $call init
-        $test eax, eax
-        $jz .quit
+        call        init
+        test        eax, eax
+        jz          .quit
   .main_loop:
-        $lea rcx, [.msg]
-        $xor edx, edx
-        $xor r8d, r8d
-        $xor r9d, r9d
-        $mov dword[.param5], PM_REMOVE
-        $icall PeekMessage
-        $test eax, eax
-        $jz .update
+        lea         rcx, [.msg]
+        xor         edx, edx
+        xor         r8d, r8d
+        xor         r9d, r9d
+        mov         dword[.param5], PM_REMOVE
+        icall       PeekMessage
+        test        eax, eax
+        jz          .update
 
-        $lea rcx, [.msg]
-        $icall DispatchMessage
-        $cmp [.msg.message], WM_QUIT
-        $je .quit
+        lea         rcx, [.msg]
+        icall       DispatchMessage
+        cmp         [.msg.message], WM_QUIT
+        je          .quit
 
-        $jmp .main_loop
+        jmp         .main_loop
   .update:
-        $call update
-        $test eax, eax
-        $jz .quit
-        $jmp .main_loop
+        call        update
+        test        eax, eax
+        jz          .quit
+        jmp         .main_loop
   .quit:
-        $call deinit
-        $xor ecx, ecx
-        $icall ExitProcess
+        call        deinit
+        xor         ecx, ecx
+        icall       ExitProcess
 ;=============================================================================
 falign
 winproc:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 16*2+8
-        $sub rsp, .k_stack_size
-        $cmp edx, WM_KEYDOWN
-        $je .keydown
-        $cmp edx, WM_DESTROY
-        $je .destroy
-        $icall DefWindowProc
-        $jmp .return
+        sub         rsp, .k_stack_size
+        cmp         edx, WM_KEYDOWN
+        je          .keydown
+        cmp         edx, WM_DESTROY
+        je          .destroy
+        icall       DefWindowProc
+        jmp         .return
   .keydown:
-        $cmp r8d, VK_ESCAPE
-        $jne .return
-        $xor ecx, ecx
-        $icall PostQuitMessage
-        $xor eax, eax
-        $jmp .return
+        cmp         r8d, VK_ESCAPE
+        jne         .return
+        xor         ecx, ecx
+        icall       PostQuitMessage
+        xor         eax, eax
+        jmp         .return
   .destroy:
-        $xor ecx, ecx
-        $icall PostQuitMessage
-        $xor eax, eax
+        xor         ecx, ecx
+        icall       PostQuitMessage
+        xor         eax, eax
   .return:
-        $add rsp, .k_stack_size
-        $ret
+        add         rsp, .k_stack_size
+        ret
 ;========================================================================
 section '.idata' import data readable writeable
 

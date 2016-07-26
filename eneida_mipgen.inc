@@ -11,17 +11,16 @@ mipgen_init:
   virtual at rsp
   rept 8 n { .param#n dq ? }
 
-  da8 .upload_heap_props D3D12_HEAP_PROPERTIES
-  da8 .texture_desc      D3D12_RESOURCE_DESC
-  da8 .uav_desc          D3D12_UNORDERED_ACCESS_VIEW_DESC
-  da8 .pso_desc          D3D12_COMPUTE_PIPELINE_STATE_DESC
+  dalign 8, .upload_heap_props D3D12_HEAP_PROPERTIES
+  dalign 8, .texture_desc      D3D12_RESOURCE_DESC
+  dalign 8, .uav_desc          D3D12_UNORDERED_ACCESS_VIEW_DESC
+  dalign 8, .pso_desc          D3D12_COMPUTE_PIPELINE_STATE_DESC
 
-  dalign 32
-  .k_stack_size = $-$$+8
+  dalign 32, .k_stack_size = $-$$+8
   end virtual
 
   virtual at r12
-  .mipgen                       mipmap_generator
+  .mipgen                      mipmap_generator
   end virtual
   ;************************************;
         zeroStack   .k_stack_size
@@ -57,7 +56,7 @@ mipgen_init:
         lea         [.param7], rax, [IID_ID3D12Resource]
         lea         [.param8], rax, [.mipgen.mip_textures+rsi*8]
         comcall     ID3D12Device.CreateCommittedResource
-        checkhr     eax, .error
+        checkhr     eax, .err
 
         ; create texture view
         mov         eax, esi
@@ -90,7 +89,7 @@ mipgen_init:
         lea         r8, [IID_ID3D12PipelineState]
         lea         r9, [.mipgen.pso]
         comcall     ID3D12Device.CreateComputePipelineState
-        checkhr     eax, .error
+        checkhr     eax, .err
 
         mov         rcx, [glob.device]
         mov         edx, 0
@@ -99,15 +98,13 @@ mipgen_init:
         lea         [.param5], rax, [IID_ID3D12RootSignature]
         lea         [.param6], rax, [.mipgen.rootsig]
         comcall     ID3D12Device.CreateRootSignature
-        checkhr     eax, .error
+        checkhr     eax, .err
 
 
         mov         eax, 1
-        jmp         .return
-  .error:
-        xor         eax, eax
-  .return:
-        add         rsp, .k_stack_size
+        jmp         .ret
+  .err: xor         eax, eax
+  .ret: add         rsp, .k_stack_size
         pop         rsi r12
         ret
 ;=============================================================================
@@ -123,27 +120,25 @@ mipgen_record_commands:
   virtual at rsp
   rept 8 n:1 { .param#n dq ? }
 
-  .texture          dq ?
-  .cmdlist          dq ?
-  .total_num_mips   dd ?                    ; total number of mipmaps to generate
-  .num_mips         dd ?                    ; number of mipmaps to generate in current iteration
-  .src_mip          dd ?, ?
+  .texture        dq ?
+  .cmdlist        dq ?
+  .total_num_mips dd ?                    ; total number of mipmaps to generate
+  .num_mips       dd ?                    ; number of mipmaps to generate in current iteration
+  .src_mip        dd ?, ?
 
-  dalign 8
-  rept 5 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
+  dalign 8, rept 5 n:0 { .barrier\#n D3D12_RESOURCE_BARRIER }
 
-  da8 .texture_desc D3D12_RESOURCE_DESC
-  da8 .srv_desc     D3D12_SHADER_RESOURCE_VIEW_DESC
-  da8 .copy_src     D3D12_TEXTURE_COPY_LOCATION
-  da8 .copy_dst     D3D12_TEXTURE_COPY_LOCATION
-  da8 .src_box      D3D12_BOX
+  dalign 8, .texture_desc D3D12_RESOURCE_DESC
+  dalign 8, .srv_desc     D3D12_SHADER_RESOURCE_VIEW_DESC
+  dalign 8, .copy_src     D3D12_TEXTURE_COPY_LOCATION
+  dalign 8, .copy_dst     D3D12_TEXTURE_COPY_LOCATION
+  dalign 8, .src_box      D3D12_BOX
 
-  dalign 32
-  .k_stack_size = $-$$+24
+  dalign 32, .k_stack_size = $-$$+24
   end virtual
 
   virtual at r12
-  .mipgen           mipmap_generator
+  .mipgen                 mipmap_generator
   end virtual
   ;************************************;
         zeroStack   .k_stack_size

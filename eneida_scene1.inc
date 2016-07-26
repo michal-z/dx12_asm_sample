@@ -8,18 +8,14 @@ scene1_init:
   virtual at rsp
   rept 6 n { .param#n dq ? }
 
-  dalign 8
-  rept 2 n:0 { .input_element_desc#n D3D12_INPUT_ELEMENT_DESC }
+  dalign 8, rept 2 n:0 { .input_element_desc\#n D3D12_INPUT_ELEMENT_DESC }
+  dalign 8, rept 2 n:0 { .barrier\#n D3D12_RESOURCE_BARRIER }
 
-  dalign 8
-  rept 2 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
+  dalign 8, .srv_desc D3D12_SHADER_RESOURCE_VIEW_DESC
+  dalign 8, .pso_desc D3D12_GRAPHICS_PIPELINE_STATE_DESC
+  dalign 8, .mipgen   mipmap_generator
 
-  da8 .srv_desc        D3D12_SHADER_RESOURCE_VIEW_DESC
-  da8 .pso_desc        D3D12_GRAPHICS_PIPELINE_STATE_DESC
-  da8 .mipgen          mipmap_generator
-
-  dalign 32
-  .k_stack_size = $-$$+8
+  dalign 32, .k_stack_size = $-$$+8
   end virtual
   ;************************************;
         zeroStack   .k_stack_size
@@ -130,7 +126,7 @@ scene1_init:
         mov         r8, [glob.frame_res0.dheap_gpu_start]
         call        mipgen_init
         test        eax, eax
-        jz          .error
+        jz          .err
 
         ; set descriptor heap used for mipmap generation
         mov         rcx, [glob.cmdlist]
@@ -186,7 +182,7 @@ scene1_init:
         lea         r8, [IID_ID3D12PipelineState]
         lea         r9, [glob.pso]
         comcall     ID3D12Device.CreateGraphicsPipelineState
-        checkhr     eax, .error
+        checkhr     eax, .err
 
         mov         rcx, [glob.device]
         xor         edx, edx
@@ -195,18 +191,16 @@ scene1_init:
         lea         [.param5], rax, [IID_ID3D12RootSignature]
         lea         [.param6], rax, [glob.rootsig]
         comcall     ID3D12Device.CreateRootSignature
-        checkhr     eax, .error
+        checkhr     eax, .err
 
         free        [.pso_desc.VS.pShaderBytecode]
         free        [.pso_desc.PS.pShaderBytecode]
 
         ; success
         mov         eax, 1
-        jmp         .return
-  .error:
-        xor         eax, eax
-  .return:
-        add         rsp, .k_stack_size
+        jmp         .ret
+  .err: xor         eax, eax
+  .ret: add         rsp, .k_stack_size
         pop         rbx rsi
         ret
 ;=============================================================================
@@ -234,13 +228,10 @@ scene1_update:
 
   .back_buffer_handle dq ?
 
-  da8 .barrier        D3D12_RESOURCE_BARRIER
+  dalign 8,  .barrier D3D12_RESOURCE_BARRIER
+  dalign 32, .matrix: rd 16
 
-  dalign 32
-  .matrix:            rd 16
-
-  dalign 32
-  .k_stack_size = $-$$
+  dalign 32, .k_stack_size = $-$$
   end virtual
 
   virtual at r12

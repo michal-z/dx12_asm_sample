@@ -86,10 +86,9 @@ IUnknown:
   .Release rq 1
 end virtual
 
-;include '$instructions.inc'
 include 'd3d12.inc'
 ;========================================================================
-DEBUG equ 1
+DEBUG equ 0
 
 macro emit [inst] {
   forward
@@ -113,8 +112,9 @@ macro debugBreak {
 
 macro falign { align 32 }
 
-macro dalign value* {
-  rb (value - 1) - (($-$$) + (value - 1)) mod value }
+macro dalign value*, decl* {
+  rb (value - 1) - (($-$$) + (value - 1)) mod value
+  decl }
 
 
 macro comcall target* {
@@ -416,12 +416,11 @@ update_frame_stats:
         sub         rsp, .k_stack_size
   ;************************************;
   virtual at rsp
-  rept 4 n { .param#n dq ? }
+  rept 4 n:1 { .param#n dq ? }
 
   .text rb 64
 
-  dalign 32
-  .k_stack_size = $-$$+24
+  dalign 32, .k_stack_size = $-$$+24
   end virtual
   ;************************************;
         mov         rax, [.prev_time]
@@ -473,13 +472,12 @@ init_window:
         sub         rsp, .k_stack_size
   ;************************************;
   virtual at rsp
-  rept 12 n { .param#n dq ? }
+  rept 12 n:1 { .param#n dq ? }
 
-  da8 .wc   WNDCLASS
-  da8 .rect RECT
+  dalign 8, .wc   WNDCLASS
+  dalign 8, .rect RECT
 
-  dalign 32
-  .k_stack_size = $-$$+16
+  dalign 32, .k_stack_size = $-$$+16
   end virtual
   ;************************************;
         zeroStack   .k_stack_size
@@ -496,7 +494,7 @@ init_window:
         lea         rcx, [.wc]
         icall       RegisterClass
         test        eax, eax
-        jz          .error
+        jz          .err
         ; compute window size
         mov         [.rect.right], eax, [glob.win_width]
         mov         [.rect.bottom], eax, [glob.win_height]
@@ -524,14 +522,12 @@ init_window:
         icall       CreateWindowEx
         mov         [glob.win_handle], rax
         test        rax, rax
-        jz          .error
+        jz          .err
         ; success
         mov         eax, 1
-        jmp         .return
-  .error:
-        xor         eax, eax
-  .return:
-        add         rsp, .k_stack_size
+        jmp         .ret
+  .err: xor         eax, eax
+  .ret: add         rsp, .k_stack_size
         pop         rsi
         ret
 ;=============================================================================
@@ -543,27 +539,25 @@ init:
         ; check cpu
         call        check_cpu_extensions
         test        eax, eax
-        jz          .error
+        jz          .err
         ; get process heap
         icall       GetProcessHeap
         mov         [glob.process_heap], rax
         test        rax, rax
-        jz          .error
+        jz          .err
         ; create window
         call        init_window
         test        eax, eax
-        jz          .error
+        jz          .err
         ; init demo
         call        demo_init
         test        eax, eax
-        jz          .error
+        jz          .err
         ; success
         mov         eax, 1
-        jmp         .return
-  .error:
-        xor         eax, eax
-  .return:
-        add         rsp, .k_stack_size
+        jmp         .ret
+  .err: xor         eax, eax
+  .ret: add         rsp, .k_stack_size
         ret
 ;=============================================================================
 falign
@@ -593,13 +587,11 @@ start:
         sub         rsp, .k_stack_size
   ;************************************;
   virtual at rsp
-
   rept 5 n { .param#n dq ? }
 
-  .msg MSG
+  dalign 8, .msg MSG
 
-  dalign 32
-  .k_stack_size = $-$$
+  dalign 32, .k_stack_size = $-$$
   end virtual
   ;************************************;
         call        init

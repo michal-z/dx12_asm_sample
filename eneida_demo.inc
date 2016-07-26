@@ -8,15 +8,15 @@ demo_init:
   virtual at rsp
   rept 7 n { .param#n dq ? }
 
-  .dbgi                         dq ?
-  .swapchain                    dq ?
-  da8 .cmdqueue_desc           D3D12_COMMAND_QUEUE_DESC
-  da8 .swapchain_desc          DXGI_SWAP_CHAIN_DESC
-  da8 .rtv_heap_desc           D3D12_DESCRIPTOR_HEAP_DESC
-  da8 .descriptor_heap_desc    D3D12_DESCRIPTOR_HEAP_DESC
+  .dbgi      dq ?
+  .swapchain dq ?
 
-  dalign 32
-  .k_stack_size = $-$$+8
+  dalign 8, .cmdqueue_desc        D3D12_COMMAND_QUEUE_DESC
+  dalign 8, .swapchain_desc       DXGI_SWAP_CHAIN_DESC
+  dalign 8, .rtv_heap_desc        D3D12_DESCRIPTOR_HEAP_DESC
+  dalign 8, .descriptor_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
+
+  dalign 32, .k_stack_size = $-$$+8
   end virtual
 
   virtual at rbx

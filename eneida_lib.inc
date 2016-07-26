@@ -12,8 +12,7 @@ load_file:
 
   .bytes_read dd ?
 
-  dalign 32
-  .k_stack_size = $-$$
+  dalign 32, .k_stack_size = $-$$
   end virtual
   ;************************************;
         xor         esi, esi                                   ; rsi - file handle
@@ -27,19 +26,19 @@ load_file:
         mov         [.param7], 0
         icall       CreateFile
         cmp         rax, INVALID_HANDLE_VALUE
-        je          .error
+        je          .err
 
         mov         rsi, rax
         mov         rcx, rsi
         xor         edx, edx
         icall       GetFileSize
         cmp         eax, INVALID_FILE_SIZE
-        je          .error
+        je          .err
 
         mov         ebx, eax
         malloc      ebx
         test        rax, rax
-        jz          .error
+        jz          .err
         mov         rdi, rax
 
         mov         rcx, rsi
@@ -49,22 +48,20 @@ load_file:
         mov         [.param5], 0
         icall       ReadFile
         test        eax, eax
-        jz          .error
+        jz          .err
         cmp         [.bytes_read], ebx
-        jne         .error
+        jne         .err
 
         mov         rcx, rsi
         icall       CloseHandle
         mov         rax, rdi
         mov         edx, ebx
-        jmp         .return
-  .error:
-        safeClose   rsi
+        jmp         .ret
+  .err: safeClose   rsi
         free        rdi
         xor         eax, eax
         xor         edx, edx
-  .return:
-        add         rsp, .k_stack_size
+  .ret: add         rsp, .k_stack_size
         pop         rbx rsi rdi
         ret
 ;=============================================================================
@@ -100,17 +97,17 @@ get_time:
 falign
 create_buffer:
 ;-----------------------------------------------------------------------------
-        sub rsp, .k_stack_size
+        sub         rsp, .k_stack_size
   ;************************************;
   virtual at rsp
   rept 8 n { .param#n dq ? }
 
-  .buffer                dq ?
-  da8 .upload_heap_props D3D12_HEAP_PROPERTIES
-  da8 .buffer_res_desc   D3D12_RESOURCE_DESC
+  .buffer dq ?
 
-  dalign 32
-  .k_stack_size = $-$$+24
+  dalign 8, .upload_heap_props D3D12_HEAP_PROPERTIES
+  dalign 8, .buffer_res_desc   D3D12_RESOURCE_DESC
+
+  dalign 32, .k_stack_size = $-$$+24
   end virtual
   ;************************************;
         zeroStack   .k_stack_size
@@ -134,14 +131,12 @@ create_buffer:
         lea         [.param7], rax, [IID_ID3D12Resource]
         lea         [.param8], rax, [.buffer]
         comcall     ID3D12Device.CreateCommittedResource
-        checkhr     eax, .error
+        checkhr     eax, .err
 
         mov         rax, [.buffer]
-        jmp         .return
-  .error:
-        xor         eax, eax
-  .return:
-        add         rsp, .k_stack_size
+        jmp         .ret
+  .err: xor         eax, eax
+  .ret: add         rsp, .k_stack_size
         ret
 ;=============================================================================
 ; in: rcx - buffer size
@@ -156,10 +151,10 @@ create_upload_buffer:
 
   .buffer      dq ?
   .addr        dq ?
-  .empty_range D3D12_RANGE
 
-  dalign 32
-  .k_stack_size = $-$$+24
+  dalign 8, .empty_range D3D12_RANGE
+
+  dalign 32, .k_stack_size = $-$$+24
   end virtual
   ;************************************;
         zeroStack   .k_stack_size
@@ -169,7 +164,7 @@ create_upload_buffer:
         call        create_buffer
         mov         [.buffer], rax
         test        rax, rax
-        jz          .error
+        jz          .err
 
         ; map buffer
         mov         rcx, [.buffer]
@@ -177,17 +172,16 @@ create_upload_buffer:
         lea         r8, [.empty_range]
         lea         r9, [.addr]
         comcall     ID3D12Resource.Map
-        checkhr     eax, .error
+        checkhr     eax, .err
 
         mov         rax, [.buffer]
         mov         rdx, [.addr]
-        jmp         .return
-  .error:
-        safeRelease [.buffer]
+        jmp         .ret
+
+  .err: safeRelease [.buffer]
         xor         eax, eax
         xor         edx, edx
-  .return:
-        add         rsp, .k_stack_size
+  .ret: add         rsp, .k_stack_size
         ret
 ;=============================================================================
 falign
@@ -226,27 +220,25 @@ get_upload_buffer:
 
   .index dd ?, ?
 
-  dalign 32
-  .k_stack_size = $-$$+24
+  dalign 32, .k_stack_size = $-$$+24
   end virtual
   ;************************************;
         mov         eax, 1
         lock xadd   [glob.upload_buffers_count], eax
         cmp         eax, k_upload_buffers_count
-        jae         .error
+        jae         .err
         mov         [.index], eax
 
         call        create_upload_buffer
         test        rax, rax
-        jz          .error
+        jz          .err
         mov         r8d, [.index]
         mov         [glob.upload_buffers+r8*8], rax
-        jmp         .return
-  .error:
-        xor         eax, eax
+        jmp         .ret
+
+  .err: xor         eax, eax
         xor         edx, edx
-  .return:
-        add         rsp, .k_stack_size
+  .ret: add         rsp, .k_stack_size
         ret
 ;=============================================================================
 ; in: rcx - addr of zero-terminated file name
@@ -268,15 +260,15 @@ create_texture_from_file:
   .image_width           dd ?
   .image_height          dd ?
   .image_addr            dq ?
-  da8 .copy_dst          D3D12_TEXTURE_COPY_LOCATION
-  da8 .copy_src          D3D12_TEXTURE_COPY_LOCATION
-  da8 .barrier           D3D12_RESOURCE_BARRIER
-  da8 .upload_heap_props D3D12_HEAP_PROPERTIES
-  da8 .texture_desc      D3D12_RESOURCE_DESC
-  da8 .layout            D3D12_PLACED_SUBRESOURCE_FOOTPRINT
 
-  dalign 32
-  .k_stack_size = $-$$
+  dalign 8, .copy_dst          D3D12_TEXTURE_COPY_LOCATION
+  dalign 8, .copy_src          D3D12_TEXTURE_COPY_LOCATION
+  dalign 8, .barrier           D3D12_RESOURCE_BARRIER
+  dalign 8, .upload_heap_props D3D12_HEAP_PROPERTIES
+  dalign 8, .texture_desc      D3D12_RESOURCE_DESC
+  dalign 8, .layout            D3D12_PLACED_SUBRESOURCE_FOOTPRINT
+
+  dalign 32, .k_stack_size = $-$$
   end virtual
   ;************************************;
         zeroStack   .k_stack_size
@@ -352,7 +344,7 @@ create_texture_from_file:
         lea         [.param7], rax, [IID_ID3D12Resource]
         lea         [.param8], rax, [.texture]
         comcall     ID3D12Device.CreateCommittedResource
-        checkhr     eax, .error
+        checkhr     eax, .err
 
 
         mov         [.copy_dst.pResource], rax, [.texture]
@@ -386,11 +378,9 @@ create_texture_from_file:
 
 
         mov         rax, [.texture]
-        jmp         .return
-  .error:
-        xor         eax, eax
-  .return:
-        add         rsp, .k_stack_size
+        jmp         .ret
+  .err: xor         eax, eax
+  .ret: add         rsp, .k_stack_size
         pop         rbx rdi rsi
         ret
 ;=============================================================================

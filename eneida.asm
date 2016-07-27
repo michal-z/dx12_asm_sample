@@ -388,33 +388,33 @@ include 'eneida_mipgen.inc'
 falign
 check_cpu_extensions:
 ;-----------------------------------------------------------------------------
-        mov         eax, 1
-        cpuid
-        and         ecx, 0x58001000          ; check RDRAND, AVX, OSXSAVE, FMA
-        cmp         ecx, 0x58001000
-        jne         .not_supported
-        mov         eax, 7
-        xor         ecx, ecx
-        cpuid
-        and         ebx, 0x20                ; check AVX2
-        cmp         ebx, 0x20
-        jne         .not_supported
-        xor         ecx, ecx
-        xgetbv
-        and         eax, 0x6                 ; check OS support
-        cmp         eax, 0x6
-        jne         .not_supported
-        mov         eax, 1
-        ret
-  .not_supported:
-        xor         eax, eax
-        ret
+            mov         eax, 1
+            cpuid
+            and         ecx, 0x58001000          ; check RDRAND, AVX, OSXSAVE, FMA
+            cmp         ecx, 0x58001000
+            jne         .not_supported
+            mov         eax, 7
+            xor         ecx, ecx
+            cpuid
+            and         ebx, 0x20                ; check AVX2
+            cmp         ebx, 0x20
+            jne         .not_supported
+            xor         ecx, ecx
+            xgetbv
+            and         eax, 0x6                 ; check OS support
+            cmp         eax, 0x6
+            jne         .not_supported
+            mov         eax, 1
+            ret
+            .not_supported:
+            xor         eax, eax
+            ret
 ;=============================================================================
 falign
 update_frame_stats:
 ;-----------------------------------------------------------------------------
-        sub         rsp, .k_stack_size
-  ;************************************;
+            sub         rsp, .k_stack_size
+  ;---------------------------------------
   virtual at rsp
   rept 4 n:1 { .param#n dq ? }
 
@@ -422,55 +422,55 @@ update_frame_stats:
 
   dalign 32, .k_stack_size = $-$$+24
   end virtual
-  ;************************************;
-        mov         rax, [.prev_time]
-        test        rax, rax
-        jnz         @f
+  ;---------------------------------------
+            mov         rax, [.prev_time]
+            test        rax, rax
+            jnz         @f
 
-        call        get_time
-        vmovsd      [.prev_time], xmm0
-        vmovsd      [.prev_update_time], xmm0
+            call        get_time
+            vmovsd      [.prev_time], xmm0
+            vmovsd      [.prev_update_time], xmm0
 
-  @@:   call        get_time                          ; xmm0 = (0,time)
-        vmovsd      [glob.time], xmm0
-        vsubsd      xmm1, xmm0, [.prev_time]        ; xmm1 = (0,time_delta)
-        vmovsd      [.prev_time], xmm0
-        vxorps      xmm2, xmm2, xmm2
-        vcvtsd2ss   xmm1, xmm2, xmm1             ; xmm1 = (0,0,0,time_delta)
-        vmovss      [glob.time_delta], xmm1
-        vmovsd      xmm1, [.prev_update_time]       ; xmm1 = (0,prev_update_time)
-        vsubsd      xmm2, xmm0, xmm1                ; xmm2 = (0,time-prev_update_time)
-        vcomisd     xmm2, [k_f64_1_0]
-        jb          @f
+  @@:       call        get_time                            ; xmm0 = (0,time)
+            vmovsd      [glob.time], xmm0
+            vsubsd      xmm1, xmm0, [.prev_time]            ; xmm1 = (0,time_delta)
+            vmovsd      [.prev_time], xmm0
+            vxorps      xmm2, xmm2, xmm2
+            vcvtsd2ss   xmm1, xmm2, xmm1                    ; xmm1 = (0,0,0,time_delta)
+            vmovss      [glob.time_delta], xmm1
+            vmovsd      xmm1, [.prev_update_time]           ; xmm1 = (0,prev_update_time)
+            vsubsd      xmm2, xmm0, xmm1                    ; xmm2 = (0,time-prev_update_time)
+            vcomisd     xmm2, [k_f64_1_0]
+            jb          @f
 
-        vmovsd      [.prev_update_time], xmm0
-        mov         eax, [.frame]
-        vxorpd      xmm1, xmm1, xmm1
-        vcvtsi2sd   xmm1, xmm1, eax              ; xmm1 = (0,frame)
-        vdivsd      xmm0, xmm1, xmm2                ; xmm0 = (0,frame/(time-prev_update_time))
-        vdivsd      xmm1, xmm2, xmm1
-        vmulsd      xmm1, xmm1, [k_f64_1000000_0]
-        mov         [.frame], 0
+            vmovsd      [.prev_update_time], xmm0
+            mov         eax, [.frame]
+            vxorpd      xmm1, xmm1, xmm1
+            vcvtsi2sd   xmm1, xmm1, eax                     ; xmm1 = (0,frame)
+            vdivsd      xmm0, xmm1, xmm2                    ; xmm0 = (0,frame/(time-prev_update_time))
+            vdivsd      xmm1, xmm2, xmm1
+            vmulsd      xmm1, xmm1, [k_f64_1000000_0]
+            mov         [.frame], 0
 
-        lea         rcx, [.text]
-        lea         rdx, [k_win_text_fmt]
-        vcvtsd2si   r8, xmm0
-        vcvtsd2si   r9, xmm1
-        icall       wsprintf
-        mov         rcx, [glob.win_handle]
-        lea         rdx, [.text]
-        icall       SetWindowText
+            lea         rcx, [.text]
+            lea         rdx, [k_win_text_fmt]
+            vcvtsd2si   r8, xmm0
+            vcvtsd2si   r9, xmm1
+            icall       wsprintf
+            mov         rcx, [glob.win_handle]
+            lea         rdx, [.text]
+            icall       SetWindowText
 
-  @@:   add         [.frame], 1
-        add         rsp, .k_stack_size
-        ret
+  @@:       add         [.frame], 1
+            add         rsp, .k_stack_size
+            ret
 ;=============================================================================
 falign
 init_window:
 ;-----------------------------------------------------------------------------
-        push        rsi
-        sub         rsp, .k_stack_size
-  ;************************************;
+            push        rsi
+            sub         rsp, .k_stack_size
+  ;---------------------------------------
   virtual at rsp
   rept 12 n:1 { .param#n dq ? }
 
@@ -479,113 +479,113 @@ init_window:
 
   dalign 32, .k_stack_size = $-$$+16
   end virtual
-  ;************************************;
-        zeroStack   .k_stack_size
-        ; create window class
-        lea         [.wc.lpfnWndProc], rax, [winproc]
-        lea         [.wc.lpszClassName], rax, [k_win_class_name]
-        xor         ecx, ecx
-        icall       GetModuleHandle
-        mov         [.wc.hInstance], rax
-        xor         ecx, ecx
-        mov         edx, IDC_ARROW
-        icall       LoadCursor
-        mov         [.wc.hCursor], rax
-        lea         rcx, [.wc]
-        icall       RegisterClass
-        test        eax, eax
-        jz          .err
-        ; compute window size
-        mov         [.rect.right], eax, [glob.win_width]
-        mov         [.rect.bottom], eax, [glob.win_height]
-        lea         rcx, [.rect]
-        mov         edx, k_win_style
-        xor         r8d, r8d
-        icall       AdjustWindowRect
-        mov         r10d, [.rect.right]
-        mov         r11d, [.rect.bottom]
-        sub         r10d, [.rect.left]
-        sub         r11d, [.rect.top]
-        ; create window
-        xor         ecx, ecx
-        lea         rdx, [k_win_class_name]
-        mov         r8, rdx
-        mov         r9d, WS_VISIBLE+k_win_style
-        mov         dword[.param5], CW_USEDEFAULT
-        mov         dword[.param6], CW_USEDEFAULT
-        mov         dword[.param7], r10d
-        mov         dword[.param8], r11d
-        mov         [.param9], 0
-        mov         [.param10], 0
-        mov         [.param11], rax, [.wc.hInstance]
-        mov         [.param12], 0
-        icall       CreateWindowEx
-        mov         [glob.win_handle], rax
-        test        rax, rax
-        jz          .err
-        ; success
-        mov         eax, 1
-        jmp         .ret
-  .err: xor         eax, eax
-  .ret: add         rsp, .k_stack_size
-        pop         rsi
-        ret
+  ;---------------------------------------
+            zeroStack   .k_stack_size
+            ; create window class
+            lea         [.wc.lpfnWndProc], rax, [winproc]
+            lea         [.wc.lpszClassName], rax, [k_win_class_name]
+            xor         ecx, ecx
+            icall       GetModuleHandle
+            mov         [.wc.hInstance], rax
+            xor         ecx, ecx
+            mov         edx, IDC_ARROW
+            icall       LoadCursor
+            mov         [.wc.hCursor], rax
+            lea         rcx, [.wc]
+            icall       RegisterClass
+            test        eax, eax
+            jz          .error
+            ; compute window size
+            mov         [.rect.right], eax, [glob.win_width]
+            mov         [.rect.bottom], eax, [glob.win_height]
+            lea         rcx, [.rect]
+            mov         edx, k_win_style
+            xor         r8d, r8d
+            icall       AdjustWindowRect
+            mov         r10d, [.rect.right]
+            mov         r11d, [.rect.bottom]
+            sub         r10d, [.rect.left]
+            sub         r11d, [.rect.top]
+            ; create window
+            xor         ecx, ecx
+            lea         rdx, [k_win_class_name]
+            mov         r8, rdx
+            mov         r9d, WS_VISIBLE+k_win_style
+            mov         dword[.param5], CW_USEDEFAULT
+            mov         dword[.param6], CW_USEDEFAULT
+            mov         dword[.param7], r10d
+            mov         dword[.param8], r11d
+            mov         [.param9], 0
+            mov         [.param10], 0
+            mov         [.param11], rax, [.wc.hInstance]
+            mov         [.param12], 0
+            icall       CreateWindowEx
+            mov         [glob.win_handle], rax
+            test        rax, rax
+            jz          .error
+            ; success
+            mov         eax, 1
+            jmp         .return
+  .error:   xor         eax, eax
+  .return:  add         rsp, .k_stack_size
+            pop         rsi
+            ret
 ;=============================================================================
 falign
 init:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
-        sub         rsp, .k_stack_size
-        ; check cpu
-        call        check_cpu_extensions
-        test        eax, eax
-        jz          .err
-        ; get process heap
-        icall       GetProcessHeap
-        mov         [glob.process_heap], rax
-        test        rax, rax
-        jz          .err
-        ; create window
-        call        init_window
-        test        eax, eax
-        jz          .err
-        ; init demo
-        call        demo_init
-        test        eax, eax
-        jz          .err
-        ; success
-        mov         eax, 1
-        jmp         .ret
-  .err: xor         eax, eax
-  .ret: add         rsp, .k_stack_size
-        ret
+            sub         rsp, .k_stack_size
+            ; check cpu
+            call        check_cpu_extensions
+            test        eax, eax
+            jz          .error
+            ; get process heap
+            icall       GetProcessHeap
+            mov         [glob.process_heap], rax
+            test        rax, rax
+            jz          .error
+            ; create window
+            call        init_window
+            test        eax, eax
+            jz          .error
+            ; init demo
+            call        demo_init
+            test        eax, eax
+            jz          .error
+            ; success
+            mov         eax, 1
+            jmp         .return
+  .error:   xor         eax, eax
+  .return:  add         rsp, .k_stack_size
+            ret
 ;=============================================================================
 falign
 deinit:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
-        sub         rsp, .k_stack_size
-        call        wait_for_gpu
-        call        demo_deinit
-        add         rsp, .k_stack_size
-        ret
+            sub         rsp, .k_stack_size
+            call        wait_for_gpu
+            call        demo_deinit
+            add         rsp, .k_stack_size
+            ret
 ;=============================================================================
 falign
 update:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
-        sub         rsp, .k_stack_size
-        call        update_frame_stats
-        call        demo_update
-        add         rsp, .k_stack_size
-        ret
+            sub         rsp, .k_stack_size
+            call        update_frame_stats
+            call        demo_update
+            add         rsp, .k_stack_size
+            ret
 ;=============================================================================
 falign
 start:
 ;-----------------------------------------------------------------------------
-        and         rsp, -32
-        sub         rsp, .k_stack_size
-  ;************************************;
+            and         rsp, -32
+            sub         rsp, .k_stack_size
+  ;---------------------------------------
   virtual at rsp
   rept 5 n { .param#n dq ? }
 
@@ -593,61 +593,61 @@ start:
 
   dalign 32, .k_stack_size = $-$$
   end virtual
-  ;************************************;
-        call        init
-        test        eax, eax
-        jz          .quit
+  ;---------------------------------------
+            call        init
+            test        eax, eax
+            jz          .quit
   .main_loop:
-        lea         rcx, [.msg]
-        xor         edx, edx
-        xor         r8d, r8d
-        xor         r9d, r9d
-        mov         dword[.param5], PM_REMOVE
-        icall       PeekMessage
-        test        eax, eax
-        jz          .update
+            lea         rcx, [.msg]
+            xor         edx, edx
+            xor         r8d, r8d
+            xor         r9d, r9d
+            mov         dword[.param5], PM_REMOVE
+            icall       PeekMessage
+            test        eax, eax
+            jz          .update
 
-        lea         rcx, [.msg]
-        icall       DispatchMessage
-        cmp         [.msg.message], WM_QUIT
-        je          .quit
+            lea         rcx, [.msg]
+            icall       DispatchMessage
+            cmp         [.msg.message], WM_QUIT
+            je          .quit
 
-        jmp         .main_loop
-  .update:
-        call        update
-        test        eax, eax
-        jz          .quit
-        jmp         .main_loop
-  .quit:
-        call        deinit
-        xor         ecx, ecx
-        icall       ExitProcess
+            jmp         .main_loop
+    .update:
+            call        update
+            test        eax, eax
+            jz          .quit
+            jmp         .main_loop
+            .quit:
+            call        deinit
+            xor         ecx, ecx
+            icall       ExitProcess
 ;=============================================================================
 falign
 winproc:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 16*2+8
-        sub         rsp, .k_stack_size
-        cmp         edx, WM_KEYDOWN
-        je          .keydown
-        cmp         edx, WM_DESTROY
-        je          .destroy
-        icall       DefWindowProc
-        jmp         .return
+            sub         rsp, .k_stack_size
+            cmp         edx, WM_KEYDOWN
+            je          .keydown
+            cmp         edx, WM_DESTROY
+            je          .destroy
+            icall       DefWindowProc
+            jmp         .return
   .keydown:
-        cmp         r8d, VK_ESCAPE
-        jne         .return
-        xor         ecx, ecx
-        icall       PostQuitMessage
-        xor         eax, eax
-        jmp         .return
+            cmp         r8d, VK_ESCAPE
+            jne         .return
+            xor         ecx, ecx
+            icall       PostQuitMessage
+            xor         eax, eax
+            jmp         .return
   .destroy:
-        xor         ecx, ecx
-        icall       PostQuitMessage
-        xor         eax, eax
+            xor         ecx, ecx
+            icall       PostQuitMessage
+            xor         eax, eax
   .return:
-        add         rsp, .k_stack_size
-        ret
+            add         rsp, .k_stack_size
+            ret
 ;========================================================================
 section '.idata' import data readable writeable
 
@@ -759,9 +759,10 @@ emit <_GetDC dw 0>,<db 'GetDC',0>
 emit <_ReleaseDC dw 0>,<db 'ReleaseDC',0>
 emit <_PostQuitMessage dw 0>,<db 'PostQuitMessage',0>
 emit <_MessageBox dw 0>,<db 'MessageBoxA',0>
-
+    
 emit <_CreateDXGIFactory1 dw 0>,<db 'CreateDXGIFactory1',0>
-
+            
 emit <_D3D12CreateDevice dw 0>,<db 'D3D12CreateDevice',0>
 emit <_D3D12GetDebugInterface dw 0>,<db 'D3D12GetDebugInterface',0>
 ;========================================================================
+; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :

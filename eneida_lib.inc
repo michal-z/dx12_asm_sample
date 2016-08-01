@@ -246,9 +246,9 @@ get_upload_buffer:
 falign
 create_texture_from_file:
 ;-----------------------------------------------------------------------------
-        push        rsi rdi rbx
-        sub         rsp, .k_stack_size
-  ;************************************;
+            push        rsi rdi rbx
+            sub         rsp, .k_stack_size
+  ;---------------------------------------
   virtual at rsp
   rept 9 n { .param#n dq ? }
 
@@ -270,118 +270,119 @@ create_texture_from_file:
 
   dalign 32, .k_stack_size = $-$$
   end virtual
-  ;************************************;
-        zeroStack   .k_stack_size
+  ;---------------------------------------
+            zeroStack   .k_stack_size
 
-        ; init transition barriers
-        mov         [.barrier.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
-        mov         [.barrier.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
-
-
-        ; load image data from file (file name addr in rcx, only BGRA8 TGA are supported)
-        call        load_file
-        movzx       ecx, word[rax+12]
-        mov         [.image_width], ecx
-        movzx       ecx, word[rax+14]
-        mov         [.image_height], ecx
-        add         rax, 18
-        mov         [.image_addr], rax
+            ; init transition barriers
+            mov         [.barrier.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
+            mov         [.barrier.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
 
 
-        mov         [.upload_heap_props.Type], D3D12_HEAP_TYPE_DEFAULT
-        mov         [.texture_desc.Dimension], D3D12_RESOURCE_DIMENSION_TEXTURE2D
-        mov         dword[.texture_desc.Width], eax, [.image_width]
-        mov         [.texture_desc.Height], eax, [.image_height]
-        mov         [.texture_desc.DepthOrArraySize], 1
-        mov         [.texture_desc.MipLevels], 0
-        mov         [.texture_desc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
-        mov         [.texture_desc.SampleDesc.Count], 1
-        mov         [.texture_desc.Layout], D3D12_TEXTURE_LAYOUT_UNKNOWN
-
-        mov         rcx, [glob.device]
-        lea         rdx, [.texture_desc]
-        mov         r8d, 0                             ; subresource index
-        mov         r9d, 1                             ; number of subresources
-        mov         [.param5], 0                       ; base offset
-        lea         [.param6], rax, [.layout]
-        lea         [.param7], rax, [.row_count]
-        lea         [.param8], rax, [.row_size]
-        lea         [.param9], rax, [.buffer_size]
-        comcall     ID3D12Device.GetCopyableFootprints
+            ; load image data from file (file name addr in rcx, only BGRA8 TGA are supported)
+            call        load_file
+            movzx       ecx, word[rax+12]
+            mov         [.image_width], ecx
+            movzx       ecx, word[rax+14]
+            mov         [.image_height], ecx
+            add         rax, 18
+            mov         [.image_addr], rax
 
 
-        ; copy image content to upload buffer
-        mov         rcx, [.buffer_size]
-        call        get_upload_buffer
-        mov         [.upload_buffer], rax
+            mov         [.upload_heap_props.Type], D3D12_HEAP_TYPE_DEFAULT
+            mov         [.texture_desc.Dimension], D3D12_RESOURCE_DIMENSION_TEXTURE2D
+            mov         dword[.texture_desc.Width], eax, [.image_width]
+            mov         [.texture_desc.Height], eax, [.image_height]
+            mov         [.texture_desc.DepthOrArraySize], 1
+            mov         [.texture_desc.MipLevels], 0
+            mov         [.texture_desc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
+            mov         [.texture_desc.SampleDesc.Count], 1
+            mov         [.texture_desc.Layout], D3D12_TEXTURE_LAYOUT_UNKNOWN
 
-        mov         rsi, [.image_addr]
-        mov         rdi, rdx                   ; upload buffer addr
-        mov         ebx, [.row_count]
+            mov         rcx, [glob.device]
+            lea         rdx, [.texture_desc]
+            mov         r8d, 0                             ; subresource index
+            mov         r9d, 1                             ; number of subresources
+            mov         [.param5], 0                       ; base offset
+            lea         [.param6], rax, [.layout]
+            lea         [.param7], rax, [.row_count]
+            lea         [.param8], rax, [.row_size]
+            lea         [.param9], rax, [.buffer_size]
+            comcall     ID3D12Device.GetCopyableFootprints
+
+
+            ; copy image content to upload buffer
+            mov         rcx, [.buffer_size]
+            call        get_upload_buffer
+            mov         [.upload_buffer], rax
+
+            mov         rsi, [.image_addr]
+            mov         rdi, rdx                   ; upload buffer addr
+            mov         ebx, [.row_count]
   .copy_loop:
-        mov         rcx, rdi
-        mov         rdx, rsi
-        mov         r8, [.row_size]
-        icall       RtlCopyMemory
-        mov         eax, [.layout.Footprint.RowPitch]
-        add         rdi, rax
-        add         rsi, [.row_size]
-        sub         ebx, 1
-        jnz         .copy_loop
+            mov         rcx, rdi
+            mov         rdx, rsi
+            mov         r8, [.row_size]
+            icall       RtlCopyMemory
+            mov         eax, [.layout.Footprint.RowPitch]
+            add         rdi, rax
+            add         rsi, [.row_size]
+            sub         ebx, 1
+            jnz         .copy_loop
 
-        ; free allocated memory
-        mov         rax, [.image_addr]
-        sub         rax, 18
-        free        rax
+            ; free allocated memory
+            mov         rax, [.image_addr]
+            sub         rax, 18
+            free        rax
 
-        ; create texture
-        mov         rcx, [glob.device]
-        lea         rdx, [.upload_heap_props]
-        mov         r8d, D3D12_HEAP_FLAG_NONE
-        lea         r9, [.texture_desc]
-        mov         [.param5], D3D12_RESOURCE_STATE_COPY_DEST
-        mov         [.param6], 0
-        lea         [.param7], rax, [IID_ID3D12Resource]
-        lea         [.param8], rax, [.texture]
-        comcall     ID3D12Device.CreateCommittedResource
-        checkhr     eax, .err
-
-
-        mov         [.copy_dst.pResource], rax, [.texture]
-        mov         [.copy_dst.Type], eax, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX
-        mov         [.copy_dst.SubresourceIndex], 0
-
-        mov         [.copy_src.pResource], rax, [.upload_buffer]
-        mov         [.copy_src.Type], eax, D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT
-        mov         [.copy_src.PlacedFootprint.Offset], 0
-        mov         [.copy_src.PlacedFootprint.Footprint.Format], eax, [.layout.Footprint.Format]
-        mov         [.copy_src.PlacedFootprint.Footprint.Width], eax, [.layout.Footprint.Width]
-        mov         [.copy_src.PlacedFootprint.Footprint.Height], eax, [.layout.Footprint.Height]
-        mov         [.copy_src.PlacedFootprint.Footprint.Depth], eax, [.layout.Footprint.Depth]
-        mov         [.copy_src.PlacedFootprint.Footprint.RowPitch], eax, [.layout.Footprint.RowPitch]
+            ; create texture
+            mov         rcx, [glob.device]
+            lea         rdx, [.upload_heap_props]
+            mov         r8d, D3D12_HEAP_FLAG_NONE
+            lea         r9, [.texture_desc]
+            mov         [.param5], D3D12_RESOURCE_STATE_COPY_DEST
+            mov         [.param6], 0
+            lea         [.param7], rax, [IID_ID3D12Resource]
+            lea         [.param8], rax, [.texture]
+            comcall     ID3D12Device.CreateCommittedResource
+            checkhr     eax, .error
 
 
-        mov         rcx, [glob.cmdlist]
-        lea         rdx, [.copy_dst]
-        mov         r8d, 0
-        mov         r9d, 0
-        mov         [.param5], 0
-        lea         [.param6], rax, [.copy_src]
-        mov         [.param7], 0
-        comcall     ID3D12GraphicsCommandList.CopyTextureRegion
+            mov         [.copy_dst.pResource], rax, [.texture]
+            mov         [.copy_dst.Type], eax, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX
+            mov         [.copy_dst.SubresourceIndex], 0
 
-        transitionBarrier .barrier, [.texture], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
-        mov         rcx, [glob.cmdlist]
-        mov         edx, 1
-        lea         r8, [.barrier]
-        comcall     ID3D12GraphicsCommandList.ResourceBarrier
+            mov         [.copy_src.pResource], rax, [.upload_buffer]
+            mov         [.copy_src.Type], eax, D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT
+            mov         [.copy_src.PlacedFootprint.Offset], 0
+            mov         [.copy_src.PlacedFootprint.Footprint.Format], eax, [.layout.Footprint.Format]
+            mov         [.copy_src.PlacedFootprint.Footprint.Width], eax, [.layout.Footprint.Width]
+            mov         [.copy_src.PlacedFootprint.Footprint.Height], eax, [.layout.Footprint.Height]
+            mov         [.copy_src.PlacedFootprint.Footprint.Depth], eax, [.layout.Footprint.Depth]
+            mov         [.copy_src.PlacedFootprint.Footprint.RowPitch], eax, [.layout.Footprint.RowPitch]
 
 
-        mov         rax, [.texture]
-        jmp         .ret
-  .err: xor         eax, eax
-  .ret: add         rsp, .k_stack_size
-        pop         rbx rdi rsi
-        ret
+            mov         rcx, [glob.cmdlist]
+            lea         rdx, [.copy_dst]
+            mov         r8d, 0
+            mov         r9d, 0
+            mov         [.param5], 0
+            lea         [.param6], rax, [.copy_src]
+            mov         [.param7], 0
+            comcall     ID3D12GraphicsCommandList.CopyTextureRegion
+
+            transitionBarrier .barrier, [.texture], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+
+            mov         rcx, [glob.cmdlist]
+            mov         edx, 1
+            lea         r8, [.barrier]
+            comcall     ID3D12GraphicsCommandList.ResourceBarrier
+
+
+            mov         rax, [.texture]
+            jmp         .return
+  .error:   xor         eax, eax
+  .return:  add         rsp, .k_stack_size
+            pop         rbx rdi rsi
+            ret
 ;=============================================================================
 ; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :

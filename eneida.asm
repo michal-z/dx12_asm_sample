@@ -92,23 +92,19 @@ DEBUG equ 0
 
 macro emit [inst] {
   forward
-        inst }
-
-macro da8 decl* {
-  dalign 8
-  decl }
+            inst }
 
 macro iacaBegin {
-        mov         ebx, 111
-        db          0x64, 0x67, 0x90 }
+            mov         ebx, 111
+            db          0x64, 0x67, 0x90 }
 
 macro iacaEnd {
-        mov         ebx, 222
-        db          0x64, 0x67, 0x90 }
+            mov         ebx, 222
+            db          0x64, 0x67, 0x90 }
 
 macro debugBreak {
-        int3
-        nop }
+            int3
+            nop }
 
 macro falign { align 32 }
 
@@ -118,45 +114,45 @@ macro dalign value*, decl* {
 
 
 macro comcall target* {
-        mov         rax, [rcx]
-        call        [rax+target] }
+            mov         rax, [rcx]
+            call        [rax+target] }
 
 macro icall target* {
-        call        [target] }
+            call        [target] }
 
 macro malloc size* {
-        mov         rcx, [glob.process_heap]
-        xor         edx, edx
-        mov         r8d, size
-        icall       HeapAlloc }
+            mov         rcx, [glob.process_heap]
+            xor         edx, edx
+            mov         r8d, size
+            icall       HeapAlloc }
 
 macro free ptr* {
   local ..end
-        mov         r8, ptr
-        test        r8, r8
-        jz          ..end
-        mov         rcx, [glob.process_heap]
-        xor         edx, edx
-        icall       HeapFree
+            mov         r8, ptr
+            test        r8, r8
+            jz          ..end
+            mov         rcx, [glob.process_heap]
+            xor         edx, edx
+            icall       HeapFree
   ..end: }
 
 macro safeClose handle* {
   local .end
-        mov         rcx, handle
-        test        rcx, rcx
-        jz          .end
-        icall       CloseHandle
-        mov         handle, 0
+            mov         rcx, handle
+            test        rcx, rcx
+            jz          .end
+            icall       CloseHandle
+            mov         handle, 0
   .end: }
 
 macro safeRelease iface* {
   local ..end
-        mov         rcx, iface
-        test        rcx, rcx
-        jz          ..end
-        mov         rax, [rcx]
-        call        [IUnknown.Release+rax]
-        mov         iface, 0
+            mov         rcx, iface
+            test        rcx, rcx
+            jz          ..end
+            mov         rax, [rcx]
+            call        [IUnknown.Release+rax]
+            mov         iface, 0
   ..end: }
 
 macro transitionBarrier ptr*, res*, sbefore*, safter* {
@@ -169,37 +165,37 @@ macro transitionBarrier ptr*, res*, sbefore*, safter* {
 
 macro mov op1*, op2*, op3 {
   if op3 eq
-        mov         op1, op2
+            mov         op1, op2
   else
-        mov         op2, op3
-        mov         op1, op2
+            mov         op2, op3
+            mov         op1, op2
   end if }
 
 macro lea op1*, op2*, op3 {
   if op3 eq
-        lea         op1, op2
+            lea         op1, op2
   else
-        lea         op2, op3
-        mov         op1, op2
+            lea         op2, op3
+            mov         op1, op2
   end if }
 
 macro zeroStack size* {
-        vpxor       ymm0, ymm0, ymm0
-        xor         eax, eax
-  @@:   vmovdqa     [rsp+rax], ymm0
-        add         eax, 32
-        cmp         eax, 32*(size/32)
-        jne         @b }
+            vpxor       ymm0, ymm0, ymm0
+            xor         eax, eax
+  @@:       vmovdqa     [rsp+rax], ymm0
+            add         eax, 32
+            cmp         eax, 32*(size/32)
+            jne         @b }
 
 macro checkhr res*, err* {
-        test        res, res
-        js          err }
+            test        res, res
+            js          err }
 
 macro vshufps d*, s0*, s1*, fp3*, fp2, fp1, fp0 {
   if fp2 eq
-        vshufps     d, s0, s1, fp3
+            vshufps     d, s0, s1, fp3
   else
-        vshufps     d, s0, s1, (fp3 shl 6) or (fp2 shl 4) or (fp1 shl 2) or fp0
+            vshufps     d, s0, s1, (fp3 shl 6) or (fp2 shl 4) or (fp1 shl 2) or fp0
   end if }
 
 

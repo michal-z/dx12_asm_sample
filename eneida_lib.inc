@@ -252,14 +252,14 @@ create_texture_from_file:
   virtual at rsp
   rept 9 n { .param#n dq ? }
 
-  .texture               dq ?
-  .upload_buffer         dq ?
-  .row_count             dd ?, ?
-  .row_size              dq ?
-  .buffer_size           dq ?
-  .image_width           dd ?
-  .image_height          dd ?
-  .image_addr            dq ?
+  .texture       dq ?
+  .upload_buffer dq ?
+  .row_count     dd ?, ?
+  .row_size      dq ?
+  .buffer_size   dq ?
+  .image_width   dd ?
+  .image_height  dd ?
+  .image_addr    dq ?
 
   dalign 8, .copy_dst          D3D12_TEXTURE_COPY_LOCATION
   dalign 8, .copy_src          D3D12_TEXTURE_COPY_LOCATION
@@ -272,11 +272,6 @@ create_texture_from_file:
   end virtual
   ;---------------------------------------
             zeroStack   .k_stack_size
-
-            ; init transition barriers
-            mov         [.barrier.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
-            mov         [.barrier.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES
-
 
             ; load image data from file (file name addr in rcx, only BGRA8 TGA are supported)
             call        load_file

@@ -1280,3 +1280,5 @@ IDXGISwapChain3:
   .SetColorSpace1 rq 1
   .ResizeBuffers1 rq 1
 end virtual
+
+; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :

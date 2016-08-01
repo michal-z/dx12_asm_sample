@@ -4,7 +4,7 @@ fast_sinf:
 ;-----------------------------------------------------------------------------
             vmovaps     xmm1, xmm0
             vmulss      xmm0, xmm0, [k_f32_reciprocal_two_pi]
-            vroundss    xmm0, xmm0, xmm0,0
+            vroundss    xmm0, xmm0, xmm0, 0
             vmulss      xmm0, xmm0, [k_f32_two_pi]
             vsubss      xmm0, xmm1, xmm0
             vandps      xmm1, xmm0, [k_i32_negative_zero]

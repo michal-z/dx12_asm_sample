@@ -292,19 +292,18 @@ mipgen_record_commands:
 
 match = 1, DEBUG {
   local ..txt_fmt, ..end
-        lea         rcx, [output_debug_string]
-        lea         rdx, [..txt_fmt]
-        mov         r8, [.texture_desc.Width]
-        mov         r9d, [.texture_desc.Height]
-        icall       wsprintf
-        lea         rcx, [output_debug_string]
-        icall       OutputDebugString
-        jmp         ..end
+            lea         rcx, [output_debug_string]
+            lea         rdx, [..txt_fmt]
+            mov         r8, [.texture_desc.Width]
+            mov         r9d, [.texture_desc.Height]
+            icall       wsprintf
+            lea         rcx, [output_debug_string]
+            icall       OutputDebugString
+            jmp         ..end
   ..txt_fmt db 'eneida: width: %d  height: %d', 0
   ..end: }
-
-        add         rsp, .k_stack_size
-        pop         rdi rsi r12 rbx
-        ret
+            add         rsp, .k_stack_size
+            pop         rdi rsi r12 rbx
+            ret
 ;=============================================================================
 ; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :

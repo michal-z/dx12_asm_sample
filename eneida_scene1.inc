@@ -163,7 +163,7 @@ scene1_init:
             lea         [.pso_desc.InputLayout.pInputElementDescs], rax, [.input_element_desc0]
             mov         [.pso_desc.InputLayout.NumElements], 2
             mov         [.pso_desc.BlendState.RenderTarget0.RenderTargetWriteMask], $0f
-            mov         [.pso_desc.SampleMask], $ffffffff
+            mov         [.pso_desc.SampleMask], 0xffffffff
             mov         [.pso_desc.RasterizerState.CullMode], D3D12_CULL_MODE_NONE
             mov         [.pso_desc.RasterizerState.FillMode], D3D12_FILL_MODE_SOLID
             mov         [.pso_desc.PrimitiveTopologyType], D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE

@@ -365,7 +365,7 @@ create_texture_from_file:
             mov         [.param7], 0
             comcall     ID3D12GraphicsCommandList.CopyTextureRegion
 
-            transitionBarrier .barrier, [.texture], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+            transBar    .barrier, [.texture], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 
             mov         rcx, [glob.cmdlist]
             mov         edx, 1

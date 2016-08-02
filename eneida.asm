@@ -37,32 +37,32 @@ struc POINT {
 struc_offsets_size POINT
 
 struc MSG {
-  .hwnd dq ?
-  .message dd ?,?
-  .wParam dq ?
-  .lParam dq ?
-  .time dd ?
-  .pt POINT
-  dd ? }
+  .hwnd    dq ?
+  .message dd ?, ?
+  .wParam  dq ?
+  .lParam  dq ?
+  .time    dd ?
+  .pt      POINT
+           dd ? }
 struc_offsets_size MSG
 
 struc WNDCLASS {
-  .style dd ?,?
-  .lpfnWndProc dq ?
-  .cbClsExtra dd ?
-  .cbWndExtra dd ?
-  .hInstance dq ?
-  .hIcon dq ?
-  .hCursor dq ?
+  .style         dd ?, ?
+  .lpfnWndProc   dq ?
+  .cbClsExtra    dd ?
+  .cbWndExtra    dd ?
+  .hInstance     dq ?
+  .hIcon         dq ?
+  .hCursor       dq ?
   .hbrBackground dq ?
-  .lpszMenuName dq ?
+  .lpszMenuName  dq ?
   .lpszClassName dq ? }
 struc_offsets_size WNDCLASS
 
 struc RECT {
-  .left dd ?
-  .top dd ?
-  .right dd ?
+  .left   dd ?
+  .top    dd ?
+  .right  dd ?
   .bottom dd ? }
 struc_offsets_size RECT
 
@@ -155,7 +155,7 @@ macro safeRelease iface* {
             mov         iface, 0
   ..end: }
 
-macro transitionBarrier ptr*, res*, sbefore*, safter* {
+macro transBar ptr*, res*, sbefore*, safter* {
             mov         [ptr+D3D12_RESOURCE_BARRIER.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
             mov         [ptr+D3D12_RESOURCE_BARRIER.Transition.pResource], rax, res
             mov         [ptr+D3D12_RESOURCE_BARRIER.Flags], 0 

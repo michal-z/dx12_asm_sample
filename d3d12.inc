@@ -229,30 +229,30 @@ D3D12_PIPELINE_STATE_FLAG_NONE = 0
 D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG = 0x1
 
 struc DXGI_RATIONAL {
-  .Numerator dd ?
-  .Denominator dd ? }
+  .Numerator            dd ?
+  .Denominator          dd ? }
 
 struc DXGI_MODE_DESC {
-  .Width dd ?
-  .Height dd ?
-  .RefreshRate DXGI_RATIONAL
-  .Format dd ?
-  .ScanlineOrdering dd ?
-  .Scaling dd ? }
+  .Width                dd ?
+  .Height               dd ?
+  .RefreshRate          DXGI_RATIONAL
+  .Format               dd ?
+  .ScanlineOrdering     dd ?
+  .Scaling              dd ? }
 
 struc DXGI_SAMPLE_DESC {
-  .Count dd ?
-  .Quality dd ? }
+  .Count                dd ?
+  .Quality              dd ? }
 
 struc DXGI_SWAP_CHAIN_DESC {
-  .BufferDesc DXGI_MODE_DESC
-  .SampleDesc DXGI_SAMPLE_DESC
-  .BufferUsage dd ?
-  .BufferCount dd ?,?
-  .OutputWindow dq ?
-  .Windowed dd ?
-  .SwapEffect dd ?
-  .Flags dd ?,? }
+  .BufferDesc           DXGI_MODE_DESC
+  .SampleDesc           DXGI_SAMPLE_DESC
+  .BufferUsage          dd ?
+  .BufferCount          dd ?, ?
+  .OutputWindow         dq ?
+  .Windowed             dd ?
+  .SwapEffect           dd ?
+  .Flags                dd ?, ? }
 
 struc D3D12_VIEWPORT {
   .TopLeftX dd ?
@@ -313,10 +313,10 @@ struc D3D12_RESOURCE_BARRIER {
 struc_offsets_size D3D12_RESOURCE_BARRIER
 
 struc D3D12_DESCRIPTOR_RANGE {
-  .RangeType dd ?
-  .NumDescriptors dd ?
-  .BaseShaderRegister dd ?
-  .RegisterSpace dd ?
+  .RangeType            dd ?
+  .NumDescriptors       dd ?
+  .BaseShaderRegister   dd ?
+  .RegisterSpace        dd ?
   .OffsetInDescriptorsFromTableStart dd ? }
 
 struc D3D12_ROOT_DESCRIPTOR_TABLE {
@@ -324,24 +324,24 @@ struc D3D12_ROOT_DESCRIPTOR_TABLE {
   .pDescriptorRanges dq ? }
 
 struc D3D12_ROOT_CONSTANTS {
-  .ShaderRegister dd ?
-  .RegisterSpace dd ?
-  .Num32BitValues dd ? }
+  .ShaderRegister       dd ?
+  .RegisterSpace        dd ?
+  .Num32BitValues       dd ? }
 
 struc D3D12_ROOT_DESCRIPTOR {
-  .ShaderRegister dd ?
-  .RegisterSpace dd ? }
+  .ShaderRegister       dd ?
+  .RegisterSpace        dd ? }
 
 struc D3D12_ROOT_PARAMETER {
-  .ParameterType dd ?,?
-  .DescriptorTable D3D12_ROOT_DESCRIPTOR_TABLE
+  .ParameterType        dd ?, ?
+  .DescriptorTable      D3D12_ROOT_DESCRIPTOR_TABLE
 
   virtual at .DescriptorTable
-  .Constants D3D12_ROOT_CONSTANTS
+  .Constants            D3D12_ROOT_CONSTANTS
   end virtual
 
   virtual at .DescriptorTable
-  .Descriptor D3D12_ROOT_DESCRIPTOR
+  .Descriptor           D3D12_ROOT_DESCRIPTOR
   end virtual
 
   .ShaderVisibility dd ?,? }

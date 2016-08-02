@@ -74,8 +74,8 @@ scene1_init:
             comcall     ID3D12GraphicsCommandList.CopyBufferRegion
 
 
-            transitionBarrier .barrier0, [glob.mesh_vb], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-            transitionBarrier .barrier1, [glob.mesh_ib], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+            transBar    .barrier0, [glob.mesh_vb], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+            transBar    .barrier1, [glob.mesh_ib], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
             mov         rcx, [glob.cmdlist]
             mov         edx, 2
             lea         r8, [.barrier0]
@@ -335,7 +335,7 @@ scene1_update:
 
             ; back buffer to D3D12_RESOURCE_STATE_RENDER_TARGET
             mov         eax, [glob.back_buffer_index]
-            transitionBarrier .barrier, [glob.swapchain_buffers+rax*8], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
+            transBar    .barrier, [glob.swapchain_buffers+rax*8], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET
             mov         rcx, [glob.cmdlist]
             mov         edx, 1
             lea         r8, [.barrier]
@@ -377,7 +377,7 @@ scene1_update:
 
             ; back buffer to D3D12_RESOURCE_STATE_PRESENT
             mov         eax, [glob.back_buffer_index]
-            transitionBarrier .barrier, [glob.swapchain_buffers+rax*8], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT
+            transBar    .barrier, [glob.swapchain_buffers+rax*8], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT
             mov         rcx, [glob.cmdlist]
             mov         edx, 1
             lea         r8, [.barrier]

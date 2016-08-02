@@ -138,7 +138,7 @@ mipgen_record_commands:
   end virtual
 
   virtual at r12
-  .mipgen                 mipmap_generator
+  .mipgen mipmap_generator
   end virtual
   ;---------------------------------------
             zeroStack   .k_stack_size
@@ -215,11 +215,11 @@ mipgen_record_commands:
             comcall     ID3D12GraphicsCommandList.Dispatch
 
 
-            transitionBarrier .barrier0, [.mipgen.mip_textures], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE
-            transitionBarrier .barrier1, [.mipgen.mip_textures+8], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE
-            transitionBarrier .barrier2, [.mipgen.mip_textures+16], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE
-            transitionBarrier .barrier3, [.mipgen.mip_textures+24], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE
-            transitionBarrier .barrier4, [.texture], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST
+            transBar    .barrier0, [.mipgen.mip_textures], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE
+            transBar    .barrier1, [.mipgen.mip_textures+8], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE
+            transBar    .barrier2, [.mipgen.mip_textures+16], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE
+            transBar    .barrier3, [.mipgen.mip_textures+24], D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE
+            transBar    .barrier4, [.texture], D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST
 
             mov         rcx, [.cmdlist]
             mov         edx, 5
@@ -271,11 +271,11 @@ mipgen_record_commands:
             jne         .copy_loop
 
 
-            transitionBarrier .barrier0, [.mipgen.mip_textures], D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-            transitionBarrier .barrier1, [.mipgen.mip_textures+8], D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-            transitionBarrier .barrier2, [.mipgen.mip_textures+16], D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-            transitionBarrier .barrier3, [.mipgen.mip_textures+24], D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
-            transitionBarrier .barrier4, [.texture], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+            transBar    .barrier0, [.mipgen.mip_textures], D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+            transBar    .barrier1, [.mipgen.mip_textures+8], D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+            transBar    .barrier2, [.mipgen.mip_textures+16], D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+            transBar    .barrier3, [.mipgen.mip_textures+24], D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+            transBar    .barrier4, [.texture], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
 
             mov         rcx, [.cmdlist]
             mov         edx, 5

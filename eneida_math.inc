@@ -195,10 +195,10 @@ fast_sincos8f:
 ;-----------------------------------------------------------------------------
 macro vec3Dot xmmA*, xmmB* {
             vmulps      xmm14, xmmA, xmmB
-            vshufps     xmmA, xmm14, xmm14, $00
-            vshufps     xmm15, xmm14, xmm14, $55
+            vshufps     xmmA, xmm14, xmm14, 0x00
+            vshufps     xmm15, xmm14, xmm14, 0x55
             vaddps      xmmA, xmmA, xmm15
-            vshufps     xmm15, xmm14, xmm14, $aa
+            vshufps     xmm15, xmm14, xmm14, 0xaa
             vaddps      xmmA, xmmA, xmm15 }
 ;=============================================================================
 ; in: xmmA.xyz vector a
@@ -207,10 +207,10 @@ macro vec3Dot xmmA*, xmmB* {
 ;-----------------------------------------------------------------------------
 macro vec3Length xmmA* {
             vmulps      xmm14, xmmA, xmmA
-            vshufps     xmmA, xmm14, xmm14, $00
-            vshufps     xmm15, xmm14, xmm14, $55
+            vshufps     xmmA, xmm14, xmm14, 0x00
+            vshufps     xmm15, xmm14, xmm14, 0x55
             vaddps      xmmA, xmmA, xmm15
-            vshufps     xmm15, xmm14, xmm14, $aa
+            vshufps     xmm15, xmm14, xmm14, 0xaa
             vaddps      xmmA, xmmA, xmm15
             vsqrtps     xmmA, xmmA }
 ;=============================================================================
@@ -220,10 +220,10 @@ macro vec3Length xmmA* {
 ;-----------------------------------------------------------------------------
 macro vec3FastNormalize xmmA* {
             vmulps      xmm14, xmmA, xmmA
-            vshufps     xmm13, xmm14, xmm14, $00
-            vshufps     xmm15, xmm14, xmm14, $55
+            vshufps     xmm13, xmm14, xmm14, 0x00
+            vshufps     xmm15, xmm14, xmm14, 0x55
             vaddps      xmm13, xmm13, xmm15
-            vshufps     xmm15, xmm14, xmm14, $aa
+            vshufps     xmm15, xmm14, xmm14, 0xaa
             vaddps      xmm13, xmm13, xmm15
             vrsqrtps    xmm13, xmm13
             vmulps      xmmA, xmmA, xmm13 }
@@ -246,13 +246,13 @@ macro vec3Cross xmmA*, xmmB* {
 falign
 matrix_look_at:
 ;-----------------------------------------------------------------------------
-            vsubps      xmm1, xmm1, xmm0                        ; eye direction
-            vec3FastNormalize xmm1                         ; xmm1 = zaxis
+            vsubps      xmm1, xmm1, xmm0                    ; eye direction
+            vec3FastNormalize xmm1                          ; xmm1 = zaxis
             vec3Cross   xmm2, xmm1
-            vec3FastNormalize xmm2                         ; xmm2 = xaxis
+            vec3FastNormalize xmm2                          ; xmm2 = xaxis
             vmovaps     xmm3, xmm1
-            vec3Cross   xmm3, xmm2                           ; xmm3 = yaxis
-            vxorps      xmm0, xmm0, [k_i32_negative_zero]       ; xmm0 = neg(eye position)
+            vec3Cross   xmm3, xmm2                          ; xmm3 = yaxis
+            vxorps      xmm0, xmm0, [k_i32_negative_zero]   ; xmm0 = neg(eye position)
             vmovaps     xmm5, xmm2
             vmovaps     xmm6, xmm3
             vmovaps     xmm4, xmm1
@@ -347,16 +347,16 @@ macro matrixPerspectiveFov {
             vxorps      xmm15, xmm15, xmm15
             vmovss      xmm0, xmm15, xmm0
             vmovss      xmm1, xmm15, xmm1
-            vdivss      xmm1, xmm1, xmm0                        ; row 1 [0 0 0 h]
-            vmovaps     xmm15, [k_f32_identity_r3]             ; xmm15 = [1 0 0 0]
-            vdivss      xmm0, xmm1, xmm2                        ; row 0 [0 0 0 w]
-            vinsertps   xmm1, xmm15, xmm1, 00011101b         ; row 1 [0 0 h 0]
+            vdivss      xmm1, xmm1, xmm0                                ; row 1 [0 0 0 h]
+            vmovaps     xmm15, [k_f32_identity_r3]                      ; xmm15 = [1 0 0 0]
+            vdivss      xmm0, xmm1, xmm2                                ; row 0 [0 0 0 w]
+            vinsertps   xmm1, xmm15, xmm1, 00011101b                    ; row 1 [0 0 h 0]
             vsubss      xmm2, xmm4, xmm3
-            vdivss      xmm2, xmm4, xmm2                        ; row 2 [0 0 0 range]
-            vmulss      xmm3, xmm2, xmm3                        ; row 3 [0 0 0 range*near_z]
-            vinsertps   xmm2, xmm15, xmm2, 00100011b         ; row 2 [1 range 0 0]
+            vdivss      xmm2, xmm4, xmm2                                ; row 2 [0 0 0 range]
+            vmulss      xmm3, xmm2, xmm3                                ; row 3 [0 0 0 range*near_z]
+            vinsertps   xmm2, xmm15, xmm2, 00100011b                    ; row 2 [1 range 0 0]
             vinsertps   xmm3, xmm15, xmm3, 00101011b
-            vxorps      xmm3, xmm3, [k_i32_negative_zero_z0]    ; row 3 [0 0 -range*near_z 0]
+            vxorps      xmm3, xmm3, [k_i32_negative_zero_z0]            ; row 3 [0 0 -range*near_z 0]
             vinsertf128 ymm0, ymm0, xmm1, 1
             vinsertf128 ymm1, ymm2, xmm3, 1 }
 ;=============================================================================
@@ -435,12 +435,12 @@ matrix_mul_transpose:
             ; transpose
             vunpcklps   ymm4, ymm10, ymm11
             vunpckhps   ymm5, ymm10, ymm11
-            vperm2f128  ymm10, ymm4, ymm5, $20
-            vperm2f128  ymm11, ymm4, ymm5, $31
+            vperm2f128  ymm10, ymm4, ymm5, 0x20
+            vperm2f128  ymm11, ymm4, ymm5, 0x31
             vunpcklps   ymm4, ymm10, ymm11
             vunpckhps   ymm5, ymm10, ymm11
-            vperm2f128  ymm0, ymm4, ymm5, $20
-            vperm2f128  ymm1, ymm4, ymm5, $31
+            vperm2f128  ymm0, ymm4, ymm5, 0x20
+            vperm2f128  ymm1, ymm4, ymm5, 0x31
             ret
 ;=============================================================================
 ; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :

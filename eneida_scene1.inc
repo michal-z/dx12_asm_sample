@@ -25,14 +25,14 @@ scene1_init:
             mov         edx, D3D12_HEAP_TYPE_DEFAULT
             mov         r8d, D3D12_RESOURCE_STATE_COPY_DEST
             call        create_buffer
-            mov         [glob.mesh_vb], rax
+            mov         [scene1.mesh_vb], rax
 
             ; create index buffer
             mov         ecx, 1024
             mov         edx, D3D12_HEAP_TYPE_DEFAULT
             mov         r8d, D3D12_RESOURCE_STATE_COPY_DEST
             call        create_buffer
-            mov         [glob.mesh_ib], rax
+            mov         [scene1.mesh_ib], rax
 
 
             ; upload vertex buffer data
@@ -48,7 +48,7 @@ scene1_init:
             vmovaps     [rdx+32], xmm0
 
             mov         rcx, [glob.cmdlist]
-            mov         rdx, [glob.mesh_vb]
+            mov         rdx, [scene1.mesh_vb]
             mov         r8d, 0
             mov         r9, rax            ; source upload buffer
             mov         [.param5], 0
@@ -66,7 +66,7 @@ scene1_init:
             mov         [rdx+8], dword 2
 
             mov         rcx, [glob.cmdlist]
-            mov         rdx, [glob.mesh_ib]
+            mov         rdx, [scene1.mesh_ib]
             mov         r8d, 0
             mov         r9, rax            ; source upload buffer
             mov         [.param5], 0
@@ -74,8 +74,8 @@ scene1_init:
             comcall     ID3D12GraphicsCommandList.CopyBufferRegion
 
 
-            transBar    .barrier0, [glob.mesh_vb], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
-            transBar    .barrier1, [glob.mesh_ib], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+            transBar    .barrier0, [scene1.mesh_vb], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
+            transBar    .barrier1, [scene1.mesh_ib], D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
             mov         rcx, [glob.cmdlist]
             mov         edx, 2
             lea         r8, [.barrier0]
@@ -83,24 +83,24 @@ scene1_init:
 
 
             ; create vertex buffer view
-            mov         rcx, [glob.mesh_vb]
+            mov         rcx, [scene1.mesh_vb]
             comcall     ID3D12Resource.GetGPUVirtualAddress
-            mov         [glob.mesh_vb_view.BufferLocation], rax
-            mov         [glob.mesh_vb_view.SizeInBytes], 1024
-            mov         [glob.mesh_vb_view.StrideInBytes], 16
+            mov         [scene1.mesh_vb_view.BufferLocation], rax
+            mov         [scene1.mesh_vb_view.SizeInBytes], 1024
+            mov         [scene1.mesh_vb_view.StrideInBytes], 16
 
             ; create index buffer view
-            mov         rcx, [glob.mesh_ib]
+            mov         rcx, [scene1.mesh_ib]
             comcall     ID3D12Resource.GetGPUVirtualAddress
-            mov         [glob.mesh_ib_view.BufferLocation], rax
-            mov         [glob.mesh_ib_view.SizeInBytes], 1024
-            mov         [glob.mesh_ib_view.Format], DXGI_FORMAT_R32_UINT
+            mov         [scene1.mesh_ib_view.BufferLocation], rax
+            mov         [scene1.mesh_ib_view.SizeInBytes], 1024
+            mov         [scene1.mesh_ib_view.Format], DXGI_FORMAT_R32_UINT
 
 
             ; create texture
             lea         rcx, [sz_img_gradient]
             call        create_texture_from_file
-            mov         [glob.texture], rax
+            mov         [scene1.texture], rax
 
             d3d12EncodeShader4ComponentMapping [.srv_desc.Shader4ComponentMapping], 0, 1, 2, 3
             mov         [.srv_desc.Format], DXGI_FORMAT_R8G8B8A8_UNORM
@@ -108,7 +108,7 @@ scene1_init:
             mov         [.srv_desc.Texture2D.MipLevels], -1
 
             mov         rcx, [glob.device]
-            mov         rdx, [glob.texture]
+            mov         rdx, [scene1.texture]
             lea         r8, [.srv_desc]
             mov         r9, [glob.cbv_srv_uav_heap_start]
             comcall     ID3D12Device.CreateShaderResourceView
@@ -131,7 +131,7 @@ scene1_init:
 
             lea         rcx, [.mipgen]
             mov         rdx, [glob.cmdlist]
-            mov         r8, [glob.texture]
+            mov         r8, [scene1.texture]
             call        mipgen_record_commands
 
 
@@ -174,7 +174,7 @@ scene1_init:
             mov         rcx, [glob.device]
             lea         rdx, [.pso_desc]
             lea         r8, [IID_ID3D12PipelineState]
-            lea         r9, [glob.pso]
+            lea         r9, [scene1.pso]
             comcall     ID3D12Device.CreateGraphicsPipelineState
             checkhr     eax, .error
 
@@ -183,7 +183,7 @@ scene1_init:
             mov         r8, [.pso_desc.VS.pShaderBytecode]
             mov         r9, [.pso_desc.VS.BytecodeLength]
             lea         [.param5], rax, [IID_ID3D12RootSignature]
-            lea         [.param6], rax, [glob.rootsig]
+            lea         [.param6], rax, [scene1.rootsig]
             comcall     ID3D12Device.CreateRootSignature
             checkhr     eax, .error
 
@@ -203,11 +203,11 @@ scene1_deinit:
 ;-----------------------------------------------------------------------------
   .k_stack_size = 32*1+24
             sub         rsp, .k_stack_size
-            safeRelease [glob.mesh_vb]
-            safeRelease [glob.mesh_ib]
-            safeRelease [glob.texture]
-            safeRelease [glob.pso]
-            safeRelease [glob.rootsig]
+            safeRelease [scene1.mesh_vb]
+            safeRelease [scene1.mesh_ib]
+            safeRelease [scene1.texture]
+            safeRelease [scene1.pso]
+            safeRelease [scene1.rootsig]
             add         rsp, .k_stack_size
             ret
 ;=============================================================================
@@ -287,7 +287,7 @@ scene1_update:
             ; begin commands recording
             mov         rcx, [glob.cmdlist]
             mov         rdx, [.frame_res.cmdalloc]
-            mov         r8, [glob.pso]
+            mov         r8, [scene1.pso]
             comcall     ID3D12GraphicsCommandList.Reset
 
             mov         rcx, [glob.cmdlist]
@@ -308,7 +308,7 @@ scene1_update:
 
             ; set root signature and resources
             mov         rcx, [glob.cmdlist]
-            mov         rdx, [glob.rootsig]
+            mov         rdx, [scene1.rootsig]
             comcall     ID3D12GraphicsCommandList.SetGraphicsRootSignature
 
             mov         rcx, [glob.cmdlist]
@@ -325,12 +325,12 @@ scene1_update:
             mov         rcx, [glob.cmdlist]
             mov         edx, 0
             mov         r8d, 1
-            lea         r9, [glob.mesh_vb_view]
+            lea         r9, [scene1.mesh_vb_view]
             comcall     ID3D12GraphicsCommandList.IASetVertexBuffers
 
             ; index buffer view
             mov         rcx, [glob.cmdlist]
-            lea         rdx, [glob.mesh_ib_view]
+            lea         rdx, [scene1.mesh_ib_view]
             comcall     ID3D12GraphicsCommandList.IASetIndexBuffer
 
             ; back buffer to D3D12_RESOURCE_STATE_RENDER_TARGET

@@ -32,39 +32,39 @@ macro struc_offsets_size s {
   end virtual }
 
 struc POINT {
-  .x dd ?
-  .y dd ? }
-struc_offsets_size POINT
+  .x                    dd ?
+  .y                    dd ? }
+struc_offsets_size      POINT
 
 struc MSG {
-  .hwnd    dq ?
-  .message dd ?, ?
-  .wParam  dq ?
-  .lParam  dq ?
-  .time    dd ?
-  .pt      POINT
-           dd ? }
-struc_offsets_size MSG
+  .hwnd                 dq ?
+  .message              dd ?, ?
+  .wParam               dq ?
+  .lParam               dq ?
+  .time                 dd ?
+  .pt                   POINT
+                        dd ? }
+struc_offsets_size      MSG
 
 struc WNDCLASS {
-  .style         dd ?, ?
-  .lpfnWndProc   dq ?
-  .cbClsExtra    dd ?
-  .cbWndExtra    dd ?
-  .hInstance     dq ?
-  .hIcon         dq ?
-  .hCursor       dq ?
-  .hbrBackground dq ?
-  .lpszMenuName  dq ?
-  .lpszClassName dq ? }
-struc_offsets_size WNDCLASS
+  .style                dd ?, ?
+  .lpfnWndProc          dq ?
+  .cbClsExtra           dd ?
+  .cbWndExtra           dd ?
+  .hInstance            dq ?
+  .hIcon                dq ?
+  .hCursor              dq ?
+  .hbrBackground        dq ?
+  .lpszMenuName         dq ?
+  .lpszClassName        dq ? }
+struc_offsets_size      WNDCLASS
 
 struc RECT {
-  .left   dd ?
-  .top    dd ?
-  .right  dd ?
-  .bottom dd ? }
-struc_offsets_size RECT
+  .left                 dd ?
+  .top                  dd ?
+  .right                dd ?
+  .bottom               dd ? }
+struc_offsets_size      RECT
 
 struc GUID p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 {
   dd p0
@@ -207,90 +207,83 @@ k_max_descriptors_count equ 1000
 ;========================================================================
 section '.data' data readable writeable
 
+struc mipmap_generator {
+  .pso                  dq 0
+  .rootsig              dq 0
+  .mip_textures         dq 4 dup 0
+  .dheap_cpu_start      dq 0
+  .dheap_gpu_start      dq 0 }
+;=============================================================================
+; scene1 data
+;-----------------------------------------------------------------------------
+align 8
+scene1:
+  .mesh_vb              dq 0
+  .mesh_ib              dq 0
+  .texture              dq 0
+  .pso                  dq 0
+  .rootsig              dq 0
+
+  dalign 8, .mesh_vb_view D3D12_VERTEX_BUFFER_VIEW
+  dalign 8, .mesh_ib_view D3D12_INDEX_BUFFER_VIEW
+;=============================================================================
+; global data
+;-----------------------------------------------------------------------------
 struc frame_resources {
-  .constant_buffer dq 0
+  .constant_buffer      dq 0
   .constant_buffer_addr dq 0
   .constant_buffer_view dq 0
 
-  .cmdalloc dq 0
+  .cmdalloc             dq 0
 
-  .dheap dq 0
-  .dheap_cpu_start dq 0
-  .dheap_gpu_start dq 0 }
-
-
-struc mipmap_generator {
-  .pso dq 0
-  .rootsig dq 0
-  .mip_textures dq 4 dup 0
-  .dheap_cpu_start dq 0
-  .dheap_gpu_start dq 0 }
-
+  .dheap                dq 0
+  .dheap_cpu_start      dq 0
+  .dheap_gpu_start      dq 0 }
 struc_offsets_size frame_resources
 
 align 8
 glob:
-  .mesh_vb dq 0
-  .mesh_ib dq 0
-  .texture dq 0
-
-  align 8
-  .mesh_vb_view D3D12_VERTEX_BUFFER_VIEW
-
-  align 8
-  .mesh_ib_view D3D12_INDEX_BUFFER_VIEW
-
-  align 8
-  .upload_buffers dq k_upload_buffers_count dup 0
+  .upload_buffers       dq k_upload_buffers_count dup 0
   .upload_buffers_count dd 0, 0
 
   align 8
-  .factory_dxgi dq 0
-  .device dq 0
-  .cmdqueue dq 0
-  .cmdlist dq 0
+  .factory_dxgi         dq 0
+  .device               dq 0
+  .cmdqueue             dq 0
+  .cmdlist              dq 0
 
-  .swapchain dq 0
-  .swapchain_buffers dq k_swapchain_buffers_count dup 0
+  .swapchain            dq 0
+  .swapchain_buffers    dq k_swapchain_buffers_count dup 0
 
-  .rtv_heap dq 0
-  .rtv_heap_start dq 0
-  .cbv_srv_uav_heap dq 0
+  .rtv_heap             dq 0
+  .rtv_heap_start       dq 0
+  .cbv_srv_uav_heap     dq 0
   .cbv_srv_uav_heap_start dq 0
 
-  .frame_fence dq 0
-  .frame_fence_event dq 0
+  .frame_fence          dq 0
+  .frame_fence_event    dq 0
   .cpu_completed_fences dq 0
 
-  align 8
-  .viewport D3D12_VIEWPORT
-
-  align 8
-  .scissor D3D12_RECT
+  dalign 8, .viewport   D3D12_VIEWPORT
+  dalign 8, .scissor    D3D12_RECT
 
   align 4
-  .rtv_size dd 0
-  .cbv_srv_uav_size dd 0
-  .back_buffer_index dd 0
-  .frame_index dd 0
-
-  align 8
-  .pso dq 0
-  .rootsig dq 0
+  .rtv_size             dd 0
+  .cbv_srv_uav_size     dd 0
+  .back_buffer_index    dd 0
+  .frame_index          dd 0
 
   align 8
   rept k_buffered_frames_count n:0 { .frame_res#n frame_resources }
 
   align 8
-  .win_handle dq 0
-  .win_width dd 1280
-  .win_height dd 720
-
-  align 8
-  .process_heap dq 0
-  .time dq 0
-  .time_delta dd 0,0
-
+  .win_handle           dq 0
+  .win_width            dd 1280
+  .win_height           dd 720
+  .process_heap         dq 0
+  .time                 dq 0
+  .time_delta           dd 0, 0
+;-----------------------------------------------------------------------------
 match = 1, DEBUG {
   output_debug_string rb 256 }
 

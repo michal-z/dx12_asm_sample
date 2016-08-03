@@ -274,20 +274,6 @@ glob:
   .time                 dq 0
   .time_delta           dd 0, 0
 ;=============================================================================
-; shaders
-;-----------------------------------------------------------------------------
-vs_object:
-  file 'hlsl/object_vs.cso'
-  .size = $ - vs_object
-
-ps_object:
-  file 'hlsl/object_ps.cso'
-  .size = $ - ps_object
-
-cs_mipgen:
-  file 'hlsl/mipgen_cs.cso'
-  .size = $ - cs_mipgen
-;=============================================================================
 match = 1, DEBUG {
   output_debug_string rb 256 }
 

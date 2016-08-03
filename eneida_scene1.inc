@@ -135,12 +135,16 @@ scene1_init:
             call        mipgen_record_commands
 
 
-            ; VS
-            lea         [.pso_desc.VS.pShaderBytecode], rax, [vs_object]
-            mov         [.pso_desc.VS.BytecodeLength], rax, vs_object.size
-            ; PS
-            lea         [.pso_desc.PS.pShaderBytecode], rax, [ps_object]
-            mov         [.pso_desc.PS.BytecodeLength], rax, ps_object.size
+            ; load VS
+            lea         rcx, [sz_vs_object]
+            call        load_file
+            mov         [.pso_desc.VS.pShaderBytecode], rax
+            mov         [.pso_desc.VS.BytecodeLength], rdx
+            ; load PS
+            lea         rcx, [sz_ps_object]
+            call        load_file
+            mov         [.pso_desc.PS.pShaderBytecode], rax
+            mov         [.pso_desc.PS.BytecodeLength], rdx
 
 
             lea         [.input_element_desc0.SemanticName], rax, [sz_position]
@@ -158,7 +162,7 @@ scene1_init:
 
             lea         [.pso_desc.InputLayout.pInputElementDescs], rax, [.input_element_desc0]
             mov         [.pso_desc.InputLayout.NumElements], 2
-            mov         [.pso_desc.BlendState.RenderTarget0.RenderTargetWriteMask], 0x0f
+            mov         [.pso_desc.BlendState.RenderTarget0.RenderTargetWriteMask], $0f
             mov         [.pso_desc.SampleMask], 0xffffffff
             mov         [.pso_desc.RasterizerState.CullMode], D3D12_CULL_MODE_NONE
             mov         [.pso_desc.RasterizerState.FillMode], D3D12_FILL_MODE_SOLID
@@ -182,6 +186,9 @@ scene1_init:
             lea         [.param6], rax, [scene1.rootsig]
             comcall     ID3D12Device.CreateRootSignature
             checkhr     eax, .error
+
+            free        [.pso_desc.VS.pShaderBytecode]
+            free        [.pso_desc.PS.pShaderBytecode]
 
             ; success
             mov         eax, 1

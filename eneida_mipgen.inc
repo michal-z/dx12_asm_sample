@@ -78,11 +78,9 @@ mipgen_init:
             jne         .create_uavs_loop
 
 
-            ; load CS
-            lea         rcx, [sz_cs_mipgen]
-            call        load_file
-            mov         [.pso_desc.CS.pShaderBytecode], rax
-            mov         [.pso_desc.CS.BytecodeLength], rdx
+            ; create CS
+            lea         [.pso_desc.CS.pShaderBytecode], rax, [cs_mipgen]
+            mov         [.pso_desc.CS.BytecodeLength], rax, cs_mipgen.size
 
             mov         rcx, [glob.device]
             lea         rdx, [.pso_desc]

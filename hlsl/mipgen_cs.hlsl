@@ -36,7 +36,7 @@ float4 LoadColor(uint idx)
 
 [RootSignature(RsMipmap)]
 [numthreads(8, 8, 1)]
-void main(uint3 globalIdx : SV_DispatchThreadID, uint groupIdx : SV_GroupIndex)
+void mipgen_cs(uint3 globalIdx : SV_DispatchThreadID, uint groupIdx : SV_GroupIndex)
 {
     uint x = globalIdx.x * 2;
     uint y = globalIdx.y * 2;

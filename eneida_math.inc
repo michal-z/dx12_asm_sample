@@ -3,7 +3,7 @@ falign
 fast_sinf:
 ;-----------------------------------------------------------------------------
             vmovaps     xmm1, xmm0
-            vmulss      xmm0, xmm0, [k_f32_reciprocal_two_pi]
+            vmulss      xmm0, xmm0, [k_f32_recip_two_pi]
             vroundss    xmm0, xmm0, xmm0, 0
             vmulss      xmm0, xmm0, [k_f32_two_pi]
             vsubss      xmm0, xmm1, xmm0
@@ -27,7 +27,7 @@ falign
 fast_sin8f:
 ;-----------------------------------------------------------------------------
             vmovaps     ymm1, ymm0
-            vmulps      ymm0, ymm0, [k_f32_reciprocal_two_pi]
+            vmulps      ymm0, ymm0, [k_f32_recip_two_pi]
             vroundps    ymm0, ymm0, 0
             vmulps      ymm0, ymm0, [k_f32_two_pi]
             vsubps      ymm0, ymm1, ymm0
@@ -55,7 +55,7 @@ falign
 fast_cosf:
 ;-----------------------------------------------------------------------------
             vmovaps     xmm1, xmm0
-            vmulss      xmm0, xmm0, [k_f32_reciprocal_two_pi]
+            vmulss      xmm0, xmm0, [k_f32_recip_two_pi]
             vroundss    xmm0, xmm0, xmm0, 0
             vmulss      xmm0, xmm0, [k_f32_two_pi]
             vsubss      xmm0, xmm1, xmm0
@@ -83,7 +83,7 @@ falign
 fast_cos8f:
 ;-----------------------------------------------------------------------------
             vmovaps     ymm1, ymm0
-            vmulps      ymm0, ymm0, [k_f32_reciprocal_two_pi]
+            vmulps      ymm0, ymm0, [k_f32_recip_two_pi]
             vroundps    ymm0, ymm0, 0
             vmulps      ymm0, ymm0, [k_f32_two_pi]
             vsubps      ymm0, ymm1, ymm0
@@ -115,7 +115,7 @@ falign
 fast_sincosf:
 ;-----------------------------------------------------------------------------
             vmovaps     xmm1, xmm0
-            vmulss      xmm0, xmm0, [k_f32_reciprocal_two_pi]
+            vmulss      xmm0, xmm0, [k_f32_recip_two_pi]
             vroundss    xmm0, xmm0, xmm0, 0
             vmulss      xmm0, xmm0, [k_f32_two_pi]
             vsubss      xmm0, xmm1, xmm0
@@ -150,7 +150,7 @@ falign
 fast_sincos8f:
 ;-----------------------------------------------------------------------------
             vmovaps     ymm1, ymm0
-            vmulps      ymm0, ymm0, [k_f32_reciprocal_two_pi]
+            vmulps      ymm0, ymm0, [k_f32_recip_two_pi]
             vroundps    ymm0, ymm0, 0
             vmulps      ymm0, ymm0, [k_f32_two_pi]
             vsubps      ymm0, ymm1, ymm0

@@ -405,17 +405,17 @@ struc D3D12_BLEND_DESC {
   rept 8 n:0 \{ .RenderTarget\#n D3D12_RENDER_TARGET_BLEND_DESC \} }
 
 struc D3D12_RASTERIZER_DESC {
-  .FillMode             dd ?
-  .CullMode             dd ?
+  .FillMode              dd ?
+  .CullMode              dd ?
   .FrontCounterClockwise dd ?
-  .DepthBias            dd ?
-  .DepthBiasClamp       dd ?
-  .SlopeScaledDepthBias dd ?
-  .DepthClipEnable      dd ?
-  .MultisampleEnable    dd ?
+  .DepthBias             dd ?
+  .DepthBiasClamp        dd ?
+  .SlopeScaledDepthBias  dd ?
+  .DepthClipEnable       dd ?
+  .MultisampleEnable     dd ?
   .AntialiasedLineEnable dd ?
-  .ForcedSampleCount    dd ?
-  .ConservativeRaster   dd ? }
+  .ForcedSampleCount     dd ?
+  .ConservativeRaster    dd ? }
 
 struc D3D12_DEPTH_STENCILOP_DESC {
   .StencilFailOp        dd ?
@@ -447,33 +447,33 @@ struc D3D12_INPUT_LAYOUT_DESC {
   .NumElements          dd ?, ? }
 
 struc D3D12_CACHED_PIPELINE_STATE {
-  .pCachedBlob          dq ?
+  .pCachedBlob           dq ?
   .CachedBlobSizeInBytes dq ? }
 
 struc D3D12_GRAPHICS_PIPELINE_STATE_DESC {
-  .pRootSignature       dq ?
-  .VS                   D3D12_SHADER_BYTECODE
-  .PS                   D3D12_SHADER_BYTECODE
-  .DS                   D3D12_SHADER_BYTECODE
-  .HS                   D3D12_SHADER_BYTECODE
-  .GS                   D3D12_SHADER_BYTECODE
-  .StreamOutput         D3D12_STREAM_OUTPUT_DESC
-  .BlendState           D3D12_BLEND_DESC
-  .SampleMask           dd ?
-  .RasterizerState      D3D12_RASTERIZER_DESC
-  .DepthStencilState    D3D12_DEPTH_STENCIL_DESC
-                        dd ?
-  .InputLayout          D3D12_INPUT_LAYOUT_DESC
-  .IBStripCutValue      dd ?
+  .pRootSignature        dq ?
+  .VS                    D3D12_SHADER_BYTECODE
+  .PS                    D3D12_SHADER_BYTECODE
+  .DS                    D3D12_SHADER_BYTECODE
+  .HS                    D3D12_SHADER_BYTECODE
+  .GS                    D3D12_SHADER_BYTECODE
+  .StreamOutput          D3D12_STREAM_OUTPUT_DESC
+  .BlendState            D3D12_BLEND_DESC
+  .SampleMask            dd ?
+  .RasterizerState       D3D12_RASTERIZER_DESC
+  .DepthStencilState     D3D12_DEPTH_STENCIL_DESC
+                         dd ?
+  .InputLayout           D3D12_INPUT_LAYOUT_DESC
+  .IBStripCutValue       dd ?
   .PrimitiveTopologyType dd ?
-  .NumRenderTargets     dd ?
-  .RTVFormats           dd 8 dup ?
-  .DSVFormat            dd ?
-  .SampleDesc           DXGI_SAMPLE_DESC
-  .NodeMask             dd ?, ?
-  .CachedPSO            D3D12_CACHED_PIPELINE_STATE
-  .Flags dd             ?, ? }
-struc_offsets_size D3D12_GRAPHICS_PIPELINE_STATE_DESC
+  .NumRenderTargets      dd ?
+  .RTVFormats            dd 8 dup ?
+  .DSVFormat             dd ?
+  .SampleDesc            DXGI_SAMPLE_DESC
+  .NodeMask              dd ?, ?
+  .CachedPSO             D3D12_CACHED_PIPELINE_STATE
+  .Flags dd              ?, ? }
+struc_offsets_size       D3D12_GRAPHICS_PIPELINE_STATE_DESC
 
 struc D3D12_COMPUTE_PIPELINE_STATE_DESC {
   .pRootSignature       dq ?
@@ -490,13 +490,13 @@ struc D3D12_VERTEX_BUFFER_VIEW {
   .BufferLocation       dq ?
   .SizeInBytes          dd ?
   .StrideInBytes        dd ? }
-struc_offsets_size D3D12_VERTEX_BUFFER_VIEW
+struc_offsets_size      D3D12_VERTEX_BUFFER_VIEW
 
 struc D3D12_INDEX_BUFFER_VIEW {
   .BufferLocation       dq ?
   .SizeInBytes          dd ?
   .Format               dd ? }
-struc_offsets_size D3D12_INDEX_BUFFER_VIEW
+struc_offsets_size      D3D12_INDEX_BUFFER_VIEW
 
 D3D12_HEAP_TYPE_DEFAULT = 1
 D3D12_HEAP_TYPE_UPLOAD = 2
@@ -551,41 +551,41 @@ D3D12_RESOURCE_FLAG_ALLOW_CROSS_ADAPTER = 0x10
 D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS = 0x20
 
 struc D3D12_RESOURCE_DESC {
-  .Dimension dd ?, ?
-  .Alignment dq ?
-  .Width dq ?
-  .Height dd ?
-  .DepthOrArraySize dw ?
-  .MipLevels dw ?
-  .Format dd ?
-  .SampleDesc DXGI_SAMPLE_DESC
-  .Layout dd ?
-  .Flags dd ?, ? }
+  .Dimension            dd ?, ?
+  .Alignment            dq ?
+  .Width                dq ?
+  .Height               dd ?
+  .DepthOrArraySize     dw ?
+  .MipLevels            dw ?
+  .Format               dd ?
+  .SampleDesc           DXGI_SAMPLE_DESC
+  .Layout               dd ?
+  .Flags                dd ?, ? }
 
 struc D3D12_SUBRESOURCE_FOOTPRINT {
-  .Format dd ?
-  .Width dd ?
-  .Height dd ?
-  .Depth dd ?
-  .RowPitch dd ? }
+  .Format               dd ?
+  .Width                dd ?
+  .Height               dd ?
+  .Depth                dd ?
+  .RowPitch             dd ? }
 
 struc D3D12_PLACED_SUBRESOURCE_FOOTPRINT {
-  .Offset dq ?
-  .Footprint D3D12_SUBRESOURCE_FOOTPRINT
-  dd ? }
+  .Offset               dq ?
+  .Footprint            D3D12_SUBRESOURCE_FOOTPRINT
+                        dd ? }
 
 D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX = 0
 D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT = 1
 
 struc D3D12_TEXTURE_COPY_LOCATION {
-  .pResource dq ?
-  .Type dd ?,?
-  .PlacedFootprint D3D12_PLACED_SUBRESOURCE_FOOTPRINT
+  .pResource            dq ?
+  .Type                 dd ?, ?
+  .PlacedFootprint      D3D12_PLACED_SUBRESOURCE_FOOTPRINT
 
   virtual at .PlacedFootprint
-  .SubresourceIndex dd ?
+  .SubresourceIndex     dd ?
   end virtual }
-struc_offsets_size D3D12_TEXTURE_COPY_LOCATION
+struc_offsets_size      D3D12_TEXTURE_COPY_LOCATION
 
 D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_0 = 0
 D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_1 = 1
@@ -599,71 +599,71 @@ D3D12_SHADER_COMPONENT_MAPPING_SHIFT = 3
 D3D12_SHADER_COMPONENT_MAPPING_ALWAYS_SET_BIT_AVOIDING_ZEROMEM_MISTAKES = (1 shl (D3D12_SHADER_COMPONENT_MAPPING_SHIFT*4))
 
 macro d3d12EncodeShader4ComponentMapping dest*, Src0*, Src1*, Src2*, Src3* {
-        mov dest, eax, (((Src0 and D3D12_SHADER_COMPONENT_MAPPING_MASK)) or \
-                        ((Src1 and D3D12_SHADER_COMPONENT_MAPPING_MASK) shl D3D12_SHADER_COMPONENT_MAPPING_SHIFT) or \
-                        ((Src2 and D3D12_SHADER_COMPONENT_MAPPING_MASK) shl (D3D12_SHADER_COMPONENT_MAPPING_SHIFT*2)) or \
-                        ((Src3 and D3D12_SHADER_COMPONENT_MAPPING_MASK) shl (D3D12_SHADER_COMPONENT_MAPPING_SHIFT*3)) or \
-                        D3D12_SHADER_COMPONENT_MAPPING_ALWAYS_SET_BIT_AVOIDING_ZEROMEM_MISTAKES) }
+            mov dest, eax, (((Src0 and D3D12_SHADER_COMPONENT_MAPPING_MASK)) or \
+                            ((Src1 and D3D12_SHADER_COMPONENT_MAPPING_MASK) shl D3D12_SHADER_COMPONENT_MAPPING_SHIFT) or \
+                            ((Src2 and D3D12_SHADER_COMPONENT_MAPPING_MASK) shl (D3D12_SHADER_COMPONENT_MAPPING_SHIFT*2)) or \
+                            ((Src3 and D3D12_SHADER_COMPONENT_MAPPING_MASK) shl (D3D12_SHADER_COMPONENT_MAPPING_SHIFT*3)) or \
+                            D3D12_SHADER_COMPONENT_MAPPING_ALWAYS_SET_BIT_AVOIDING_ZEROMEM_MISTAKES) }
 
 
 D3D12_BUFFER_SRV_FLAG_NONE = 0
 D3D12_BUFFER_SRV_FLAG_RAW = 0x1
 
 struc D3D12_BUFFER_SRV {
-  .FirstElement dq ?
-  .NumElements dd ?
-  .StructureByteStride dd ?
-  .Flags dd ?,? }
+  .FirstElement         dq ?
+  .NumElements          dd ?
+  .StructureByteStride  dd ?
+  .Flags                dd ?, ? }
 
 struc D3D12_TEX1D_SRV {
-  .MostDetailedMip dd ?
-  .MipLevels dd ?
-  .ResourceMinLODClamp dd ? }
+  .MostDetailedMip      dd ?
+  .MipLevels            dd ?
+  .ResourceMinLODClamp  dd ? }
 
 struc D3D12_TEX1D_ARRAY_SRV {
-  .MostDetailedMip dd ?
-  .MipLevels dd ?
-  .FirstArraySlice dd ?
-  .ArraySize dd ?
-  .ResourceMinLODClamp dd ? }
+  .MostDetailedMip      dd ?
+  .MipLevels            dd ?
+  .FirstArraySlice      dd ?
+  .ArraySize            dd ?
+  .ResourceMinLODClamp  dd ? }
 
 struc D3D12_TEX2D_SRV {
-  .MostDetailedMip dd ?
-  .MipLevels dd ?
-  .PlaneSlice dd ?
-  .ResourceMinLODClamp dd ? }
+  .MostDetailedMip      dd ?
+  .MipLevels            dd ?
+  .PlaneSlice           dd ?
+  .ResourceMinLODClamp  dd ? }
 
 struc D3D12_TEX2D_ARRAY_SRV {
-  .MostDetailedMip dd ?
-  .MipLevels dd ?
-  .FirstArraySlice dd ?
-  .ArraySize dd ?
-  .PlaneSlice dd ?
-  .ResourceMinLODClamp dd ? }
+  .MostDetailedMip      dd ?
+  .MipLevels            dd ?
+  .FirstArraySlice      dd ?
+  .ArraySize            dd ?
+  .PlaneSlice           dd ?
+  .ResourceMinLODClamp  dd ? }
 
 struc D3D12_TEX3D_SRV {
-  .MostDetailedMip dd ?
-  .MipLevels dd ?
-  .ResourceMinLODClamp dd ? }
+  .MostDetailedMip      dd ?
+  .MipLevels            dd ?
+  .ResourceMinLODClamp  dd ? }
 
 struc D3D12_TEXCUBE_SRV {
-  .MostDetailedMip dd ?
-  .MipLevels dd ?
-  .ResourceMinLODClamp dd ? }
+  .MostDetailedMip      dd ?
+  .MipLevels            dd ?
+  .ResourceMinLODClamp  dd ? }
 
 struc D3D12_TEXCUBE_ARRAY_SRV {
-  .MostDetailedMip dd ?
-  .MipLevels dd ?
-  .First2DArrayFace dd ?
-  .NumCubes dd ?
-  .ResourceMinLODClamp dd ? }
+  .MostDetailedMip      dd ?
+  .MipLevels            dd ?
+  .First2DArrayFace     dd ?
+  .NumCubes             dd ?
+  .ResourceMinLODClamp  dd ? }
 
 struc D3D12_TEX2DMS_SRV {
   .UnusedField_NothingToDefine dd ? }
 
 struc D3D12_TEX2DMS_ARRAY_SRV {
-  .FirstArraySlice dd ?
-  .ArraySize dd ? }
+  .FirstArraySlice      dd ?
+  .ArraySize            dd ? }
 
 D3D12_SRV_DIMENSION_UNKNOWN = 0
 D3D12_SRV_DIMENSION_BUFFER = 1
@@ -678,52 +678,50 @@ D3D12_SRV_DIMENSION_TEXTURECUBE = 9
 D3D12_SRV_DIMENSION_TEXTURECUBEARRAY = 10
 
 struc D3D12_SHADER_RESOURCE_VIEW_DESC {
-  .Format               dd ?
-  .ViewDimension dd ?
-  .Shader4ComponentMapping dd ?
-  dd ?
-  .Buffer D3D12_BUFFER_SRV
+  .Format                  dd ?
+  .ViewDimension           dd ?
+  .Shader4ComponentMapping dd ?, ?
+  .Buffer                  D3D12_BUFFER_SRV
 
   virtual at .Buffer
-  .Texture1D D3D12_TEX1D_SRV
+  .Texture1D               D3D12_TEX1D_SRV
   end virtual
 
   virtual at .Buffer
-  .Texture1DArray D3D12_TEX1D_ARRAY_SRV
+  .Texture1DArray          D3D12_TEX1D_ARRAY_SRV
   end virtual
 
   virtual at .Buffer
-  .Texture2D D3D12_TEX2D_SRV
+  .Texture2D               D3D12_TEX2D_SRV
   end virtual
 
   virtual at .Buffer
-  .Texture2DArray D3D12_TEX2D_ARRAY_SRV
+  .Texture2DArray          D3D12_TEX2D_ARRAY_SRV
   end virtual
 
   virtual at .Buffer
-  .Texture2DMS D3D12_TEX2DMS_SRV
+  .Texture2DMS             D3D12_TEX2DMS_SRV
   end virtual
 
   virtual at .Buffer
-  .Texture2DMSArray D3D12_TEX2DMS_ARRAY_SRV
+  .Texture2DMSArray        D3D12_TEX2DMS_ARRAY_SRV
   end virtual
 
   virtual at .Buffer
-  .Texture3D D3D12_TEX3D_SRV
+  .Texture3D               D3D12_TEX3D_SRV
   end virtual
 
   virtual at .Buffer
-  .TextureCube D3D12_TEXCUBE_SRV
+  .TextureCube             D3D12_TEXCUBE_SRV
   end virtual
 
   virtual at .Buffer
-  .TextureCubeArray D3D12_TEXCUBE_ARRAY_SRV
+  .TextureCubeArray        D3D12_TEXCUBE_ARRAY_SRV
   end virtual }
 
 struc D3D12_CONSTANT_BUFFER_VIEW_DESC {
-  .BufferLocation dq ?
-  .SizeInBytes dd ?
-  dd ? }
+  .BufferLocation       dq ?
+  .SizeInBytes          dd ?, ? }
 
 D3D12_FILTER_MIN_MAG_MIP_POINT = 0
 D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR = 0x1
@@ -769,35 +767,34 @@ D3D12_BUFFER_UAV_FLAG_NONE = 0
 D3D12_BUFFER_UAV_FLAG_RAW = 0x1
 
 struc D3D12_BUFFER_UAV {
-  .FirstElement dq ?
-  .NumElements dd ?
-  .StructureByteStride dd ?
+  .FirstElement         dq ?
+  .NumElements          dd ?
+  .StructureByteStride  dd ?
   .CounterOffsetInBytes dq ?
-  .Flags dd ?
-  dd ? }
+  .Flags                dd ?, ? }
 
 struc D3D12_TEX1D_UAV {
-  .MipSlice dd ? }
+  .MipSlice             dd ? }
 
 struc D3D12_TEX1D_ARRAY_UAV {
-  .MipSlice dd ?
-  .FirstArraySlice dd ?
-  .ArraySize dd ? }
+  .MipSlice             dd ?
+  .FirstArraySlice      dd ?
+  .ArraySize            dd ? }
 
 struc D3D12_TEX2D_UAV {
-  .MipSlice dd ?
-  .PlaneSlice dd ? }
+  .MipSlice             dd ?
+  .PlaneSlice           dd ? }
 
 struc D3D12_TEX2D_ARRAY_UAV {
-  .MipSlice dd ?
-  .FirstArraySlice dd ?
-  .ArraySize dd ?
-  .PlaneSlice dd ? }
+  .MipSlice             dd ?
+  .FirstArraySlice      dd ?
+  .ArraySize            dd ?
+  .PlaneSlice           dd ? }
 
 struc D3D12_TEX3D_UAV {
-  .MipSlice dd ?
-  .FirstWSlice dd ?
-  .WSize dd ? }
+  .MipSlice             dd ?
+  .FirstWSlice          dd ?
+  .WSize                dd ? }
 
 D3D12_UAV_DIMENSION_UNKNOWN = 0
 D3D12_UAV_DIMENSION_BUFFER = 1
@@ -808,29 +805,36 @@ D3D12_UAV_DIMENSION_TEXTURE2DARRAY = 5
 D3D12_UAV_DIMENSION_TEXTURE3D = 8
 
 struc D3D12_UNORDERED_ACCESS_VIEW_DESC {
-  .Format dd ?
-  .ViewDimension dd ?
-  .Buffer D3D12_BUFFER_UAV
+  .Format               dd ?
+  .ViewDimension        dd ?
+  .Buffer               D3D12_BUFFER_UAV
 
   virtual at .Buffer
-  .Texture1D D3D12_TEX1D_UAV
+  .Texture1D            D3D12_TEX1D_UAV
   end virtual
 
   virtual at .Buffer
-  .Texture1DArray D3D12_TEX1D_ARRAY_UAV
+  .Texture1DArray       D3D12_TEX1D_ARRAY_UAV
   end virtual
 
   virtual at .Buffer
-  .Texture2D D3D12_TEX2D_UAV
+  .Texture2D            D3D12_TEX2D_UAV
   end virtual
 
   virtual at .Buffer
-  .Texture2DArray D3D12_TEX2D_ARRAY_UAV
+  .Texture2DArray       D3D12_TEX2D_ARRAY_UAV
   end virtual
 
   virtual at .Buffer
-  .Texture3D D3D12_TEX3D_UAV
+  .Texture3D            D3D12_TEX3D_UAV
   end virtual }
+
+virtual at 0
+IUnknown:
+  .QueryInterface rq 1
+  .AddRef rq 1
+  .Release rq 1
+end virtual
 
 virtual at 0
 ID3D12Device:

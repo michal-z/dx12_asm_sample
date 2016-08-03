@@ -100,6 +100,8 @@ mipgen_init:
             comcall     ID3D12Device.CreateRootSignature
             checkhr     eax, .error
 
+            free        [.pso_desc.CS.pShaderBytecode]
+
 
             mov         eax, 1
             jmp         .return

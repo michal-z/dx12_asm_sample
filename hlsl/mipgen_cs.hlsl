@@ -8,8 +8,7 @@ RWTexture2D<float4> uav_out_mip1 : register(u1);
 RWTexture2D<float4> uav_out_mip2 : register(u2);
 RWTexture2D<float4> uav_out_mip3 : register(u3);
 
-struct params_t
-{
+struct params_t {
   uint src_mip_level;
   uint num_mip_levels;
 };
@@ -20,23 +19,20 @@ groupshared float g_green[64];
 groupshared float g_blue[64];
 groupshared float g_alpha[64];
 
-void store_color(uint idx, float4 color)
-{
+void store_color(uint idx, float4 color) {
   g_red[idx] = color.r;
   g_green[idx] = color.g;
   g_blue[idx] = color.b;
   g_alpha[idx] = color.a;
 }
 
-float4 load_color(uint idx)
-{
+float4 load_color(uint idx) {
   return float4(g_red[idx], g_green[idx], g_blue[idx], g_alpha[idx]);
 }
 
 [RootSignature(rs_mipgen)]
 [numthreads(8, 8, 1)]
-void mipgen_cs(uint3 global_idx : SV_DispatchThreadID, uint group_idx : SV_GroupIndex)
-{
+void mipgen_cs(uint3 global_idx : SV_DispatchThreadID, uint group_idx : SV_GroupIndex) {
   uint x = global_idx.x * 2;
   uint y = global_idx.y * 2;
 
@@ -52,8 +48,7 @@ void mipgen_cs(uint3 global_idx : SV_DispatchThreadID, uint group_idx : SV_Group
   if (cbv_params.num_mip_levels == 1) return;
   GroupMemoryBarrierWithGroupSync();
 
-  if ((group_idx & 0x9) == 0)
-  {
+  if ((group_idx & 0x9) == 0) {
     s10 = load_color(group_idx + 1);
     s01 = load_color(group_idx + 8);
     s11 = load_color(group_idx + 9);
@@ -66,8 +61,7 @@ void mipgen_cs(uint3 global_idx : SV_DispatchThreadID, uint group_idx : SV_Group
   if (cbv_params.num_mip_levels == 2) return;
   GroupMemoryBarrierWithGroupSync();
 
-  if ((group_idx & 0x1b) == 0)
-  {
+  if ((group_idx & 0x1b) == 0) {
     s10 = load_color(group_idx + 2);
     s01 = load_color(group_idx + 16);
     s11 = load_color(group_idx + 18);
@@ -80,8 +74,7 @@ void mipgen_cs(uint3 global_idx : SV_DispatchThreadID, uint group_idx : SV_Group
   if (cbv_params.num_mip_levels == 3) return;
   GroupMemoryBarrierWithGroupSync();
 
-  if (group_idx == 0)
-  {
+  if (group_idx == 0) {
     s10 = load_color(group_idx + 4);
     s01 = load_color(group_idx + 32);
     s11 = load_color(group_idx + 36);

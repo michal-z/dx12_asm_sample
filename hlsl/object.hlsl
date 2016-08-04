@@ -31,12 +31,12 @@ vs_out object_vs(vs_in i) {
 
 
 //; PS
-Texture2D<float4> g_texture : register(t0);
+Texture2D<float4> srv_texture : register(t0);
 SamplerState s_sampler : register(s0);
 
 [RootSignature(rs)]
 float4 object_ps(vs_out i) : SV_Target0 {
-  return g_texture.Sample(s_sampler, i.texcoord);
+  return srv_texture.Sample(s_sampler, i.texcoord);
 }
 
 

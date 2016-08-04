@@ -40,11 +40,11 @@ scene1_init:
             call        get_upload_buffer ; returns upload buffer in rax
 
             ; fill staging vertex buffer
-            vmovaps     xmm0, [tri_v0]
+            vmovaps     xmm0, [scene1.tri_v0]
             vmovaps     [rdx], xmm0
-            vmovaps     xmm0, [tri_v1]
+            vmovaps     xmm0, [scene1.tri_v1]
             vmovaps     [rdx+16], xmm0
-            vmovaps     xmm0, [tri_v2]
+            vmovaps     xmm0, [scene1.tri_v2]
             vmovaps     [rdx+32], xmm0
 
             mov         rcx, [glob.cmdlist]
@@ -237,19 +237,19 @@ scene1_update:
             lea         r12, [r12+glob.frame_res0]
 
             ; update rotation matrix
-            vmovss      xmm0, [eye_half_fovy]
+            vmovss      xmm0, [scene1.eye_half_fovy]
             call        fast_sincosf
             vmovss      xmm2, [glob.viewport.Width]
             vdivss      xmm2, xmm2, [glob.viewport.Height]
-            vmovss      xmm3, [eye_nearz]
-            vmovss      xmm4, [eye_farz]
+            vmovss      xmm3, [scene1.eye_nearz]
+            vmovss      xmm4, [scene1.eye_farz]
             matrixPerspectiveFov
             vmovaps     [.matrix], ymm0
             vmovaps     [.matrix+32], ymm1
 
-            vmovaps     xmm0, [eye_position]
-            vmovaps     xmm1, [eye_focus]
-            vmovaps     xmm2, [eye_up]
+            vmovaps     xmm0, [scene1.eye_position]
+            vmovaps     xmm1, [scene1.eye_focus]
+            vmovaps     xmm2, [scene1.eye_up]
             call        matrix_look_at
 
             vmovaps     ymm2, [.matrix]
@@ -350,7 +350,7 @@ scene1_update:
             ; clear back buffer
             mov         rcx, [glob.cmdlist]
             mov         rdx, [.back_buffer_handle]
-            lea         r8, [clear_color]
+            lea         r8, [scene1.clear_color]
             xor         r9d, r9d
             mov         [.param5], 0
             comcall     ID3D12GraphicsCommandList.ClearRenderTargetView

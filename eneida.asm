@@ -188,6 +188,11 @@ macro vshufps d*, s0*, s1*, fp3*, fp2, fp1, fp0 {
             vshufps     d, s0, s1, (fp3 shl 6) or (fp2 shl 4) or (fp1 shl 2) or fp0
   end if }
 ;========================================================================
+selected_scene fix scene1
+macro sceneInit { call selected_scene#_init }
+macro sceneDeinit { call selected_scene#_deinit }
+macro sceneUpdate { call selected_scene#_update }
+
 DEBUG                        equ 0
 k_win_style                  equ WS_OVERLAPPED+WS_SYSMENU+WS_CAPTION+WS_MINIMIZEBOX
 k_buffered_frames_count      equ 3
@@ -213,6 +218,23 @@ scene1:
   .texture              dq 0
   .pso                  dq 0
   .rootsig              dq 0
+
+  align 4
+  .eye_half_fovy        dd 0.52359876 ; pi / 6
+  .eye_nearz            dd 1.0
+  .eye_farz             dd 100.0
+
+  align 4
+  .clear_color          dd 0.0, 0.2, 0.4, 1.0
+
+  align 16
+  .eye_position:        dd 1.2, 1.2, -1.2, 1.0
+  .eye_focus:           dd 0.0, 0.0, 0.0, 1.0
+  .eye_up:              dd 0.0, 1.0, 0.0, 0.0
+
+  .tri_v0:              dd -0.7, -0.7, 0.0, 1.0
+  .tri_v1:              dd 0.0, 0.7, 0.5, 0.0
+  .tri_v2:              dd 0.7, -0.7, 1.0, 1.0
 
   dalign 8, .mesh_vb_view D3D12_VERTEX_BUFFER_VIEW
   dalign 8, .mesh_ib_view D3D12_INDEX_BUFFER_VIEW
@@ -276,23 +298,6 @@ glob:
 ;=============================================================================
 match = 1, DEBUG {
   output_debug_string rb 256 }
-
-align 4
-eye_half_fovy           dd 0.52359876 ; pi / 6
-eye_nearz               dd 1.0
-eye_farz                dd 100.0
-
-align 4
-clear_color             dd 0.0, 0.2, 0.4, 1.0
-
-align 16
-eye_position:           dd 1.2, 1.2, -1.2, 1.0
-eye_focus:              dd 0.0, 0.0, 0.0, 1.0
-eye_up:                 dd 0.0, 1.0, 0.0, 0.0
-
-tri_v0:                 dd -0.7, -0.7, 0.0, 1.0
-tri_v1:                 dd 0.0, 0.7, 0.5, 0.0
-tri_v2:                 dd 0.7, -0.7, 1.0, 1.0
 
 align 1
 sz_position             db 'POSITION', 0
@@ -631,118 +636,115 @@ winproc:
 ;========================================================================
 section '.idata' import data readable writeable
 
-dd 0,0,0,rva _kernel32,rva _kernel32_table
-dd 0,0,0,rva _user32,rva _user32_table
-dd 0,0,0,rva _dxgi,rva _dxgi_table
-dd 0,0,0,rva _d3d12,rva _d3d12_table
-dd 0,0,0,0,0
+dd 0, 0, 0, rva _kernel32, rva _kernel32_table
+dd 0, 0, 0, rva _user32,   rva _user32_table
+dd 0, 0, 0, rva _dxgi,     rva _dxgi_table
+dd 0, 0, 0, rva _d3d12,    rva _d3d12_table
+dd 0, 0, 0, 0, 0
 
 _kernel32_table:
-  GetModuleHandle dq rva _GetModuleHandle
-  ExitProcess dq rva _ExitProcess
-  ExitThread dq rva _ExitThread
+  GetModuleHandle           dq rva _GetModuleHandle
+  ExitProcess               dq rva _ExitProcess
+  ExitThread                dq rva _ExitThread
   QueryPerformanceFrequency dq rva _QueryPerformanceFrequency
-  QueryPerformanceCounter dq rva _QueryPerformanceCounter
-  CloseHandle dq rva _CloseHandle
-  Sleep dq rva _Sleep
-  LoadLibrary dq rva _LoadLibrary
-  FreeLibrary dq rva _FreeLibrary
-  GetProcAddress dq rva _GetProcAddress
-  HeapAlloc dq rva _HeapAlloc
-  HeapReAlloc dq rva _HeapReAlloc
-  HeapFree dq rva _HeapFree
-  CreateFile dq rva _CreateFile
-  ReadFile dq rva _ReadFile
-  GetFileSize dq rva _GetFileSize
-  GetProcessHeap dq rva _GetProcessHeap
-  CreateEventEx dq rva _CreateEventEx
-  CreateThread dq rva _CreateThread
-  SetEvent dq rva _SetEvent
-  WaitForSingleObject dq rva _WaitForSingleObject
-  WaitForMultipleObjects dq rva _WaitForMultipleObjects
-  OutputDebugString dq rva _OutputDebugString
-  RtlCopyMemory dq rva _RtlCopyMemory
-  RtlFillMemory dq rva _RtlFillMemory
-  RtlMoveMemory dq rva _RtlMoveMemory
-  RtlZeroMemory dq rva _RtlZeroMemory
-  dq 0
-
+  QueryPerformanceCounter   dq rva _QueryPerformanceCounter
+  CloseHandle               dq rva _CloseHandle
+  Sleep                     dq rva _Sleep
+  LoadLibrary               dq rva _LoadLibrary
+  FreeLibrary               dq rva _FreeLibrary
+  GetProcAddress            dq rva _GetProcAddress
+  HeapAlloc                 dq rva _HeapAlloc
+  HeapReAlloc               dq rva _HeapReAlloc
+  HeapFree                  dq rva _HeapFree
+  CreateFile                dq rva _CreateFile
+  ReadFile                  dq rva _ReadFile
+  GetFileSize               dq rva _GetFileSize
+  GetProcessHeap            dq rva _GetProcessHeap
+  CreateEventEx             dq rva _CreateEventEx
+  CreateThread              dq rva _CreateThread
+  SetEvent                  dq rva _SetEvent
+  WaitForSingleObject       dq rva _WaitForSingleObject
+  WaitForMultipleObjects    dq rva _WaitForMultipleObjects
+  OutputDebugString         dq rva _OutputDebugString
+  RtlCopyMemory             dq rva _RtlCopyMemory
+  RtlFillMemory             dq rva _RtlFillMemory
+  RtlMoveMemory             dq rva _RtlMoveMemory
+  RtlZeroMemory             dq rva _RtlZeroMemory
+                            dq 0
 _user32_table:
-  wsprintf dq rva _wsprintf
-  RegisterClass dq rva _RegisterClass
-  CreateWindowEx dq rva _CreateWindowEx
-  DefWindowProc dq rva _DefWindowProc
-  PeekMessage dq rva _PeekMessage
-  DispatchMessage dq rva _DispatchMessage
-  LoadCursor dq rva _LoadCursor
-  SetWindowText dq rva _SetWindowText
-  AdjustWindowRect dq rva _AdjustWindowRect
-  GetDC dq rva _GetDC
-  ReleaseDC dq rva _ReleaseDC
-  PostQuitMessage dq rva _PostQuitMessage
-  MessageBox dq rva _MessageBox
-  dq 0
-
+  wsprintf                  dq rva _wsprintf
+  RegisterClass             dq rva _RegisterClass
+  CreateWindowEx            dq rva _CreateWindowEx
+  DefWindowProc             dq rva _DefWindowProc
+  PeekMessage               dq rva _PeekMessage
+  DispatchMessage           dq rva _DispatchMessage
+  LoadCursor                dq rva _LoadCursor
+  SetWindowText             dq rva _SetWindowText
+  AdjustWindowRect          dq rva _AdjustWindowRect
+  GetDC                     dq rva _GetDC
+  ReleaseDC                 dq rva _ReleaseDC
+  PostQuitMessage           dq rva _PostQuitMessage
+  MessageBox                dq rva _MessageBox
+                            dq 0
 _dxgi_table:
-  CreateDXGIFactory1 dq rva _CreateDXGIFactory1
-  dq 0
-
+  CreateDXGIFactory1        dq rva _CreateDXGIFactory1
+                            dq 0
 _d3d12_table:
-  D3D12CreateDevice dq rva _D3D12CreateDevice
-  D3D12GetDebugInterface dq rva _D3D12GetDebugInterface
-  dq 0
+  D3D12CreateDevice         dq rva _D3D12CreateDevice
+  D3D12GetDebugInterface    dq rva _D3D12GetDebugInterface
+                            dq 0
 
-_kernel32 db 'kernel32.dll',0
-_user32 db 'user32.dll',0
-_gdi32 db 'gdi32.dll',0
-_dxgi db 'dxgi.dll',0
-_d3d12 db 'd3d12.dll',0
+_kernel32                   db 'kernel32.dll', 0
+_user32                     db 'user32.dll', 0
+_gdi32                      db 'gdi32.dll', 0
+_dxgi                       db 'dxgi.dll', 0
+_d3d12                      db 'd3d12.dll', 0
 
-emit <_GetModuleHandle dw 0>,<db 'GetModuleHandleA',0>
-emit <_ExitProcess dw 0>,<db 'ExitProcess',0>
-emit <_ExitThread dw 0>,<db 'ExitThread',0>
-emit <_QueryPerformanceFrequency dw 0>,<db 'QueryPerformanceFrequency',0>
-emit <_QueryPerformanceCounter dw 0>,<db 'QueryPerformanceCounter',0>
-emit <_CloseHandle dw 0>,<db 'CloseHandle',0>
-emit <_Sleep dw 0>,<db 'Sleep',0>
-emit <_LoadLibrary dw 0>,<db 'LoadLibraryA',0>
-emit <_FreeLibrary dw 0>,<db 'FreeLibrary',0>
-emit <_GetProcAddress dw 0>,<db 'GetProcAddress',0>
-emit <_HeapAlloc dw 0>,<db 'HeapAlloc',0>
-emit <_HeapReAlloc dw 0>,<db 'HeapReAlloc',0>
-emit <_HeapFree dw 0>,<db 'HeapFree',0>
-emit <_CreateFile dw 0>,<db 'CreateFileA',0>
-emit <_ReadFile dw 0>,<db 'ReadFile',0>
-emit <_GetFileSize dw 0>,<db 'GetFileSize',0>
-emit <_GetProcessHeap dw 0>,<db 'GetProcessHeap',0>
-emit <_CreateEventEx dw 0>,<db 'CreateEventExA',0>
-emit <_CreateThread dw 0>,<db 'CreateThread',0>
-emit <_SetEvent dw 0>,<db 'SetEvent',0>
-emit <_WaitForSingleObject dw 0>,<db 'WaitForSingleObject',0>
-emit <_WaitForMultipleObjects dw 0>,<db 'WaitForMultipleObjects',0>
-emit <_OutputDebugString dw 0>,<db 'OutputDebugStringA',0>
-emit <_RtlCopyMemory dw 0>,<db 'RtlCopyMemory',0>
-emit <_RtlFillMemory dw 0>,<db 'RtlFillMemory',0>
-emit <_RtlMoveMemory dw 0>,<db 'RtlMoveMemory',0>
-emit <_RtlZeroMemory dw 0>,<db 'RtlZeroMemory',0>
+emit <_GetModuleHandle           dw 0>, <db 'GetModuleHandleA', 0>
+emit <_ExitProcess               dw 0>, <db 'ExitProcess', 0>
+emit <_ExitThread                dw 0>, <db 'ExitThread', 0>
+emit <_QueryPerformanceFrequency dw 0>, <db 'QueryPerformanceFrequency', 0>
+emit <_QueryPerformanceCounter   dw 0>, <db 'QueryPerformanceCounter', 0>
+emit <_CloseHandle               dw 0>, <db 'CloseHandle', 0>
+emit <_Sleep                     dw 0>, <db 'Sleep', 0>
+emit <_LoadLibrary               dw 0>, <db 'LoadLibraryA', 0>
+emit <_FreeLibrary               dw 0>, <db 'FreeLibrary', 0>
+emit <_GetProcAddress            dw 0>, <db 'GetProcAddress', 0>
+emit <_HeapAlloc                 dw 0>, <db 'HeapAlloc', 0>
+emit <_HeapReAlloc               dw 0>, <db 'HeapReAlloc',0>
+emit <_HeapFree                  dw 0>, <db 'HeapFree',0>
+emit <_CreateFile                dw 0>, <db 'CreateFileA',0>
+emit <_ReadFile                  dw 0>, <db 'ReadFile',0>
+emit <_GetFileSize               dw 0>, <db 'GetFileSize',0>
+emit <_GetProcessHeap            dw 0>, <db 'GetProcessHeap',0>
+emit <_CreateEventEx             dw 0>, <db 'CreateEventExA',0>
+emit <_CreateThread              dw 0>, <db 'CreateThread',0>
+emit <_SetEvent                  dw 0>, <db 'SetEvent',0>
+emit <_WaitForSingleObject       dw 0>, <db 'WaitForSingleObject',0>
+emit <_WaitForMultipleObjects    dw 0>, <db 'WaitForMultipleObjects',0>
+emit <_OutputDebugString         dw 0>, <db 'OutputDebugStringA',0>
+emit <_RtlCopyMemory             dw 0>, <db 'RtlCopyMemory',0>
+emit <_RtlFillMemory             dw 0>, <db 'RtlFillMemory',0>
+emit <_RtlMoveMemory             dw 0>, <db 'RtlMoveMemory',0>
+emit <_RtlZeroMemory             dw 0>, <db 'RtlZeroMemory',0>
 
-emit <_wsprintf dw 0>,<db 'wsprintfA',0>
-emit <_RegisterClass dw 0>,<db 'RegisterClassA',0>
-emit <_CreateWindowEx dw 0>,<db 'CreateWindowExA',0>
-emit <_DefWindowProc dw 0>,<db 'DefWindowProcA',0>
-emit <_PeekMessage dw 0>,<db 'PeekMessageA',0>
-emit <_DispatchMessage dw 0>,<db 'DispatchMessageA',0>
-emit <_LoadCursor dw 0>,<db 'LoadCursorA',0>
-emit <_SetWindowText dw 0>,<db 'SetWindowTextA',0>
-emit <_AdjustWindowRect dw 0>,<db 'AdjustWindowRect',0>
-emit <_GetDC dw 0>,<db 'GetDC',0>
-emit <_ReleaseDC dw 0>,<db 'ReleaseDC',0>
-emit <_PostQuitMessage dw 0>,<db 'PostQuitMessage',0>
-emit <_MessageBox dw 0>,<db 'MessageBoxA',0>
+emit <_wsprintf                  dw 0>, <db 'wsprintfA', 0>
+emit <_RegisterClass             dw 0>, <db 'RegisterClassA', 0>
+emit <_CreateWindowEx            dw 0>, <db 'CreateWindowExA', 0>
+emit <_DefWindowProc             dw 0>, <db 'DefWindowProcA', 0>
+emit <_PeekMessage               dw 0>, <db 'PeekMessageA', 0>
+emit <_DispatchMessage           dw 0>, <db 'DispatchMessageA', 0>
+emit <_LoadCursor                dw 0>, <db 'LoadCursorA', 0>
+emit <_SetWindowText             dw 0>, <db 'SetWindowTextA', 0>
+emit <_AdjustWindowRect          dw 0>, <db 'AdjustWindowRect', 0>
+emit <_GetDC                     dw 0>, <db 'GetDC', 0>
+emit <_ReleaseDC                 dw 0>, <db 'ReleaseDC', 0>
+emit <_PostQuitMessage           dw 0>, <db 'PostQuitMessage', 0>
+emit <_MessageBox                dw 0>, <db 'MessageBoxA', 0>
     
-emit <_CreateDXGIFactory1 dw 0>,<db 'CreateDXGIFactory1',0>
+emit <_CreateDXGIFactory1        dw 0>, <db 'CreateDXGIFactory1', 0>
             
-emit <_D3D12CreateDevice dw 0>,<db 'D3D12CreateDevice',0>
-emit <_D3D12GetDebugInterface dw 0>,<db 'D3D12GetDebugInterface',0>
+emit <_D3D12CreateDevice         dw 0>, <db 'D3D12CreateDevice', 0>
+emit <_D3D12GetDebugInterface    dw 0>, <db 'D3D12GetDebugInterface', 0>
 ;========================================================================
 ; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :

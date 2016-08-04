@@ -205,6 +205,7 @@ demo_init:
             lea         r9, [glob.cbv_srv_uav_heap]
             comcall     ID3D12Device.CreateDescriptorHeap
             checkhr     eax, .error
+            ; get CPU handle
             mov         rcx, [glob.cbv_srv_uav_heap]
             lea         rdx, [glob.cbv_srv_uav_heap_start]
             comcall     ID3D12DescriptorHeap.GetCPUDescriptorHandleForHeapStart
@@ -246,7 +247,7 @@ demo_init:
             ;
             ; Init scene
             ;
-            call        scene1_init
+            sceneInit
             test        eax, eax
             jz          .error
             ;
@@ -277,7 +278,7 @@ demo_deinit:
             push        rbx
             sub         rsp, .k_stack_size
 
-            call        scene1_deinit
+            sceneDeinit
 
             lea         rbx, [glob.frame_res0]
   virtual at rbx
@@ -325,7 +326,8 @@ demo_update:
   .k_stack_size = 32*1+16
             push        rsi
             sub         rsp, .k_stack_size
-            call        scene1_update
+
+            sceneUpdate
             ;test eax, eax
             ;jz .error
 

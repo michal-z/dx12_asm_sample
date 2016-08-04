@@ -23,7 +23,7 @@ struct transform_t
 ConstantBuffer<transform_t> g_transform : register(b0);
 
 
-// VS
+//; VS
 [RootSignature(rs)]
 vs_out object_vs(vs_in i)
 {
@@ -34,7 +34,7 @@ vs_out object_vs(vs_in i)
 }
 
 
-// PS
+//; PS
 Texture2D<float4> g_texture : register(t0);
 SamplerState g_sampler : register(s0);
 

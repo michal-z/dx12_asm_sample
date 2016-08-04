@@ -267,9 +267,9 @@ glob:
   .swapchain            dq 0
   .swapchain_buffers    dq k_swapchain_buffers_count dup 0
 
-  .rtv_heap             dq 0
-  .rtv_heap_start       dq 0
-  .cbv_srv_uav_heap     dq 0
+  .rtv_heap               dq 0
+  .rtv_heap_start         dq 0
+  .cbv_srv_uav_heap       dq 0
   .cbv_srv_uav_heap_start dq 0
 
   .frame_fence          dq 0
@@ -711,22 +711,22 @@ emit <_LoadLibrary               dw 0>, <db 'LoadLibraryA', 0>
 emit <_FreeLibrary               dw 0>, <db 'FreeLibrary', 0>
 emit <_GetProcAddress            dw 0>, <db 'GetProcAddress', 0>
 emit <_HeapAlloc                 dw 0>, <db 'HeapAlloc', 0>
-emit <_HeapReAlloc               dw 0>, <db 'HeapReAlloc',0>
-emit <_HeapFree                  dw 0>, <db 'HeapFree',0>
-emit <_CreateFile                dw 0>, <db 'CreateFileA',0>
-emit <_ReadFile                  dw 0>, <db 'ReadFile',0>
-emit <_GetFileSize               dw 0>, <db 'GetFileSize',0>
-emit <_GetProcessHeap            dw 0>, <db 'GetProcessHeap',0>
-emit <_CreateEventEx             dw 0>, <db 'CreateEventExA',0>
-emit <_CreateThread              dw 0>, <db 'CreateThread',0>
-emit <_SetEvent                  dw 0>, <db 'SetEvent',0>
-emit <_WaitForSingleObject       dw 0>, <db 'WaitForSingleObject',0>
-emit <_WaitForMultipleObjects    dw 0>, <db 'WaitForMultipleObjects',0>
-emit <_OutputDebugString         dw 0>, <db 'OutputDebugStringA',0>
-emit <_RtlCopyMemory             dw 0>, <db 'RtlCopyMemory',0>
-emit <_RtlFillMemory             dw 0>, <db 'RtlFillMemory',0>
-emit <_RtlMoveMemory             dw 0>, <db 'RtlMoveMemory',0>
-emit <_RtlZeroMemory             dw 0>, <db 'RtlZeroMemory',0>
+emit <_HeapReAlloc               dw 0>, <db 'HeapReAlloc', 0>
+emit <_HeapFree                  dw 0>, <db 'HeapFree', 0>
+emit <_CreateFile                dw 0>, <db 'CreateFileA', 0>
+emit <_ReadFile                  dw 0>, <db 'ReadFile', 0>
+emit <_GetFileSize               dw 0>, <db 'GetFileSize', 0>
+emit <_GetProcessHeap            dw 0>, <db 'GetProcessHeap', 0>
+emit <_CreateEventEx             dw 0>, <db 'CreateEventExA', 0>
+emit <_CreateThread              dw 0>, <db 'CreateThread', 0>
+emit <_SetEvent                  dw 0>, <db 'SetEvent', 0>
+emit <_WaitForSingleObject       dw 0>, <db 'WaitForSingleObject', 0>
+emit <_WaitForMultipleObjects    dw 0>, <db 'WaitForMultipleObjects', 0>
+emit <_OutputDebugString         dw 0>, <db 'OutputDebugStringA', 0>
+emit <_RtlCopyMemory             dw 0>, <db 'RtlCopyMemory', 0>
+emit <_RtlFillMemory             dw 0>, <db 'RtlFillMemory', 0>
+emit <_RtlMoveMemory             dw 0>, <db 'RtlMoveMemory', 0>
+emit <_RtlZeroMemory             dw 0>, <db 'RtlZeroMemory', 0>
 
 emit <_wsprintf                  dw 0>, <db 'wsprintfA', 0>
 emit <_RegisterClass             dw 0>, <db 'RegisterClassA', 0>

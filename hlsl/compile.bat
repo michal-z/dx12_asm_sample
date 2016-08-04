@@ -8,7 +8,7 @@ if errorlevel 1 goto eof
 %FXC% /E object_ps /Fo ..\data\shader\object_ps.cso /T ps_5_1 object.hlsl
 if errorlevel 1 goto eof
 
-%FXC% /E main /Fo ..\data\shader\mipgen_cs.cso /T cs_5_1 mipgen_cs.hlsl
+%FXC% /E mipgen_cs /Fo ..\data\shader\mipgen_cs.cso /T cs_5_1 mipgen_cs.hlsl
 if errorlevel 1 goto eof
 
 :eof

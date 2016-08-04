@@ -293,7 +293,7 @@ struc D3D12_RESOURCE_TRANSITION_BARRIER {
 struc D3D12_RESOURCE_ALIASING_BARRIER {
   .pResourceBefore      dq ?
   .pResourceAfter       dq ? }
-struc_offsets_size D3D12_RESOURCE_ALIASING_BARRIER
+struc_offsets_size      D3D12_RESOURCE_ALIASING_BARRIER
 
 struc D3D12_RESOURCE_UAV_BARRIER {
   .pResource            dq ? }
@@ -310,13 +310,13 @@ struc D3D12_RESOURCE_BARRIER {
   virtual at .Transition
   .UAV                  D3D12_RESOURCE_UAV_BARRIER
   end virtual }
-struc_offsets_size D3D12_RESOURCE_BARRIER
+struc_offsets_size      D3D12_RESOURCE_BARRIER
 
 struc D3D12_DESCRIPTOR_RANGE {
-  .RangeType            dd ?
-  .NumDescriptors       dd ?
-  .BaseShaderRegister   dd ?
-  .RegisterSpace        dd ?
+  .RangeType                         dd ?
+  .NumDescriptors                    dd ?
+  .BaseShaderRegister                dd ?
+  .RegisterSpace                     dd ?
   .OffsetInDescriptorsFromTableStart dd ? }
 
 struc D3D12_ROOT_DESCRIPTOR_TABLE {
@@ -400,9 +400,10 @@ struc D3D12_RENDER_TARGET_BLEND_DESC {
   .RenderTargetWriteMask db ?, ?, ?, ? }
 
 struc D3D12_BLEND_DESC {
-  .AlphaToCoverageEnable dd ?
+  .AlphaToCoverageEnable  dd ?
   .IndependentBlendEnable dd ?
-  rept 8 n:0 \{ .RenderTarget\#n D3D12_RENDER_TARGET_BLEND_DESC \} }
+  rept 8 n:0
+  \{ .RenderTarget\#n     D3D12_RENDER_TARGET_BLEND_DESC \} }
 
 struc D3D12_RASTERIZER_DESC {
   .FillMode              dd ?
@@ -1281,5 +1282,3 @@ IDXGISwapChain3:
   .SetColorSpace1 rq 1
   .ResizeBuffers1 rq 1
 end virtual
-
-; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :

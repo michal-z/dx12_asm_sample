@@ -443,4 +443,4 @@ matrix_mul_transpose:
             vperm2f128  ymm1, ymm4, ymm5, 0x31
             ret
 ;=============================================================================
-; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :
+

@@ -396,4 +396,4 @@ scene1_update:
             pop         r12 rdi rsi
             ret
 ;=============================================================================
-; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :
+

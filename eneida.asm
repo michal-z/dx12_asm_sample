@@ -747,4 +747,4 @@ emit <_CreateDXGIFactory1        dw 0>, <db 'CreateDXGIFactory1', 0>
 emit <_D3D12CreateDevice         dw 0>, <db 'D3D12CreateDevice', 0>
 emit <_D3D12GetDebugInterface    dw 0>, <db 'D3D12GetDebugInterface', 0>
 ;========================================================================
-; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :
+

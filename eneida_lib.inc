@@ -380,4 +380,4 @@ create_texture_from_file:
             pop         rbx rdi rsi
             ret
 ;=============================================================================
-; vim: ft=fasm ts=12 sts=12 sw=12 autoindent :
+

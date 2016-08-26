@@ -8,14 +8,15 @@ scene1_init:
   virtual at rsp
   rept 6 n { .param#n dq ? }
 
-  dalign 8, rept 2 n:0 { .input_element_desc\#n D3D12_INPUT_ELEMENT_DESC }
-  dalign 8, rept 2 n:0 { .barrier\#n D3D12_RESOURCE_BARRIER }
+  rept 2 n:0 { .input_element_desc#n D3D12_INPUT_ELEMENT_DESC }
+  rept 2 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
 
-  dalign 8, .srv_desc D3D12_SHADER_RESOURCE_VIEW_DESC
-  dalign 8, .pso_desc D3D12_GRAPHICS_PIPELINE_STATE_DESC
-  dalign 8, .mipgen   mipmap_generator
+  .srv_desc D3D12_SHADER_RESOURCE_VIEW_DESC
+  .pso_desc D3D12_GRAPHICS_PIPELINE_STATE_DESC
+  .mipgen   mipmap_generator
 
-  dalign 32, .k_stack_size = $-$$+8
+  dalign 32
+  .k_stack_size = $-$$+8
   end virtual
   ;---------------------------------------
             zeroStack   .k_stack_size
@@ -222,10 +223,12 @@ scene1_update:
 
   .back_buffer_handle dq ?
 
-  dalign 8,  .barrier D3D12_RESOURCE_BARRIER
-  dalign 32, .matrix: rd 16
+  .barrier D3D12_RESOURCE_BARRIER
+  dalign 32
+  .matrix: rd 16
 
-  dalign 32, .k_stack_size = $-$$
+  dalign 32
+  .k_stack_size = $-$$
   end virtual
 
   virtual at r12

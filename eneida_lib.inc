@@ -12,7 +12,8 @@ load_file:
 
   .bytes_read dd ?
 
-  dalign 32, .k_stack_size = $-$$
+  dalign 32
+  .k_stack_size = $-$$
   end virtual
   ;---------------------------------------
             xor         esi, esi                                   ; rsi - file handle
@@ -104,10 +105,11 @@ create_buffer:
 
   .buffer dq ?
 
-  dalign 8, .upload_heap_props D3D12_HEAP_PROPERTIES
-  dalign 8, .buffer_res_desc   D3D12_RESOURCE_DESC
+  .upload_heap_props D3D12_HEAP_PROPERTIES
+  .buffer_res_desc   D3D12_RESOURCE_DESC
 
-  dalign 32, .k_stack_size = $-$$+24
+  dalign 32
+  .k_stack_size = $-$$+24
   end virtual
   ;---------------------------------------
             zeroStack   .k_stack_size
@@ -152,9 +154,10 @@ create_upload_buffer:
   .buffer      dq ?
   .addr        dq ?
 
-  dalign 8, .empty_range D3D12_RANGE
+  .empty_range D3D12_RANGE
 
-  dalign 32, .k_stack_size = $-$$+24
+  dalign 32
+  .k_stack_size = $-$$+24
   end virtual
   ;---------------------------------------
             zeroStack   .k_stack_size
@@ -220,7 +223,8 @@ get_upload_buffer:
 
   .index dd ?, ?
 
-  dalign 32, .k_stack_size = $-$$+24
+  dalign 32
+  .k_stack_size = $-$$+24
   end virtual
   ;---------------------------------------
             mov         eax, 1
@@ -261,14 +265,15 @@ create_texture_from_file:
   .image_height  dd ?
   .image_addr    dq ?
 
-  dalign 8, .copy_dst          D3D12_TEXTURE_COPY_LOCATION
-  dalign 8, .copy_src          D3D12_TEXTURE_COPY_LOCATION
-  dalign 8, .barrier           D3D12_RESOURCE_BARRIER
-  dalign 8, .upload_heap_props D3D12_HEAP_PROPERTIES
-  dalign 8, .texture_desc      D3D12_RESOURCE_DESC
-  dalign 8, .layout            D3D12_PLACED_SUBRESOURCE_FOOTPRINT
+  .copy_dst          D3D12_TEXTURE_COPY_LOCATION
+  .copy_src          D3D12_TEXTURE_COPY_LOCATION
+  .barrier           D3D12_RESOURCE_BARRIER
+  .upload_heap_props D3D12_HEAP_PROPERTIES
+  .texture_desc      D3D12_RESOURCE_DESC
+  .layout            D3D12_PLACED_SUBRESOURCE_FOOTPRINT
 
-  dalign 32, .k_stack_size = $-$$
+  dalign 32
+  .k_stack_size = $-$$
   end virtual
   ;---------------------------------------
             zeroStack   .k_stack_size

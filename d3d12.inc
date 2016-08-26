@@ -228,55 +228,90 @@ D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH = 4
 D3D12_PIPELINE_STATE_FLAG_NONE = 0
 D3D12_PIPELINE_STATE_FLAG_TOOL_DEBUG = 0x1
 
-struc DXGI_RATIONAL {
-  .Numerator            dd ?
-  .Denominator          dd ? }
+struc DXGI_RATIONAL
+{
+  dalign        align.DXGI_RATIONAL
+  .:
+  .Numerator    dd 0
+  .Denominator  dd 0
+  dalign        align.DXGI_RATIONAL
+}
+align.DXGI_RATIONAL = 4
+strucOffsetsSize DXGI_RATIONAL
 
-struc DXGI_MODE_DESC {
-  .Width                dd ?
-  .Height               dd ?
-  .RefreshRate          DXGI_RATIONAL
-  .Format               dd ?
-  .ScanlineOrdering     dd ?
-  .Scaling              dd ? }
+struc DXGI_MODE_DESC
+{
+  dalign            align.DXGI_MODE_DESC
+  .:
+  .Width            dd 0
+  .Height           dd 0
+  .RefreshRate      DXGI_RATIONAL
+  .Format           dd 0
+  .ScanlineOrdering dd 0
+  .Scaling          dd 0
+  dalign            align.DXGI_MODE_DESC
+}
+maxValue         align.DXGI_MODE_DESC, 4, align.DXGI_RATIONAL
+strucOffsetsSize DXGI_MODE_DESC
 
-struc DXGI_SAMPLE_DESC {
-  .Count                dd ?
-  .Quality              dd ? }
+struc DXGI_SAMPLE_DESC
+{
+  dalign        align.DXGI_SAMPLE_DESC
+  .:
+  .Count        dd 0
+  .Quality      dd 0
+  dalign        align.DXGI_SAMPLE_DESC
+}
+align.DXGI_SAMPLE_DESC = 4
 
 struc DXGI_SWAP_CHAIN_DESC {
-  .BufferDesc           DXGI_MODE_DESC
-  .SampleDesc           DXGI_SAMPLE_DESC
-  .BufferUsage          dd ?
-  .BufferCount          dd ?, ?
-  .OutputWindow         dq ?
-  .Windowed             dd ?
-  .SwapEffect           dd ?
-  .Flags                dd ?, ? }
+  dalign        align.DXGI_SWAP_CHAIN_DESC
+  .:
+  .BufferDesc   DXGI_MODE_DESC
+  .SampleDesc   DXGI_SAMPLE_DESC
+  .BufferUsage  dd 0
+  .BufferCount  dd 0
+  .OutputWindow dq 0
+  .Windowed     dd 0
+  .SwapEffect   dd 0
+  .Flags        dd 0
+  dalign        align.DXGI_SWAP_CHAIN_DESC
+}
+maxValue         align.DXGI_SWAP_CHAIN_DESC, 8, align.DXGI_MODE_DESC, align.DXGI_SAMPLE_DESC
+strucOffsetsSize DXGI_SWAP_CHAIN_DESC
 
 struc D3D12_VIEWPORT {
-  .TopLeftX             dd ?
-  .TopLeftY             dd ?
-  .Width                dd ?
-  .Height               dd ?
-  .MinDepth             dd ?
-  .MaxDepth             dd ? }
+  dalign 4
+  .:
+  .TopLeftX     dd 0
+  .TopLeftY     dd 0
+  .Width        dd 0
+  .Height       dd 0
+  .MinDepth     dd 0
+  .MaxDepth     dd 0
+  dalign 4 }
 
 D3D12_RECT fix RECT
 
 struc D3D12_BOX {
-  .left                 dd ?
-  .top                  dd ?
-  .front                dd ?
-  .right                dd ?
-  .bottom               dd ?
-  .back                 dd ? }
+  dalign 4
+  .:
+  .left                 dd 0
+  .top                  dd 0
+  .front                dd 0
+  .right                dd 0
+  .bottom               dd 0
+  .back                 dd 0
+  dalign 4 }
 
 struc D3D12_COMMAND_QUEUE_DESC {
+  dalign 4
+  .:
   .Type                 dd ?
   .Priority             dd ?
   .Flags                dd ?
-  .NodeMask             dd ? }
+  .NodeMask             dd ?
+  dalign 4 }
 
 struc D3D12_DESCRIPTOR_HEAP_DESC {
   .Type                 dd ?
@@ -310,7 +345,7 @@ struc D3D12_RESOURCE_BARRIER {
   virtual at .Transition
   .UAV                  D3D12_RESOURCE_UAV_BARRIER
   end virtual }
-struc_offsets_size      D3D12_RESOURCE_BARRIER
+strucOffsetsSize      D3D12_RESOURCE_BARRIER
 
 struc D3D12_DESCRIPTOR_RANGE {
   .RangeType                         dd ?
@@ -474,7 +509,7 @@ struc D3D12_GRAPHICS_PIPELINE_STATE_DESC {
   .NodeMask              dd ?, ?
   .CachedPSO             D3D12_CACHED_PIPELINE_STATE
   .Flags dd              ?, ? }
-struc_offsets_size       D3D12_GRAPHICS_PIPELINE_STATE_DESC
+strucOffsetsSize       D3D12_GRAPHICS_PIPELINE_STATE_DESC
 
 struc D3D12_COMPUTE_PIPELINE_STATE_DESC {
   .pRootSignature       dq ?
@@ -491,13 +526,13 @@ struc D3D12_VERTEX_BUFFER_VIEW {
   .BufferLocation       dq ?
   .SizeInBytes          dd ?
   .StrideInBytes        dd ? }
-struc_offsets_size      D3D12_VERTEX_BUFFER_VIEW
+strucOffsetsSize      D3D12_VERTEX_BUFFER_VIEW
 
 struc D3D12_INDEX_BUFFER_VIEW {
   .BufferLocation       dq ?
   .SizeInBytes          dd ?
   .Format               dd ? }
-struc_offsets_size      D3D12_INDEX_BUFFER_VIEW
+strucOffsetsSize      D3D12_INDEX_BUFFER_VIEW
 
 D3D12_HEAP_TYPE_DEFAULT = 1
 D3D12_HEAP_TYPE_UPLOAD = 2
@@ -586,7 +621,7 @@ struc D3D12_TEXTURE_COPY_LOCATION {
   virtual at .PlacedFootprint
   .SubresourceIndex     dd ?
   end virtual }
-struc_offsets_size      D3D12_TEXTURE_COPY_LOCATION
+strucOffsetsSize      D3D12_TEXTURE_COPY_LOCATION
 
 D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_0 = 0
 D3D12_SHADER_COMPONENT_MAPPING_FROM_MEMORY_COMPONENT_1 = 1

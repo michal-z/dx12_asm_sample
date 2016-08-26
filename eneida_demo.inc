@@ -11,12 +11,13 @@ demo_init:
   .dbgi      dq ?
   .swapchain dq ?
 
-  dalign 8, .cmdqueue_desc        D3D12_COMMAND_QUEUE_DESC
-  dalign 8, .swapchain_desc       DXGI_SWAP_CHAIN_DESC
-  dalign 8, .rtv_heap_desc        D3D12_DESCRIPTOR_HEAP_DESC
-  dalign 8, .descriptor_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
+  .cmdqueue_desc        D3D12_COMMAND_QUEUE_DESC
+  .swapchain_desc       DXGI_SWAP_CHAIN_DESC
+  .rtv_heap_desc        D3D12_DESCRIPTOR_HEAP_DESC
+  .descriptor_heap_desc D3D12_DESCRIPTOR_HEAP_DESC
 
-  dalign 32, .k_stack_size = $-$$+8
+  dalign 32
+  .k_stack_size = $-$$+8
   end virtual
 
   virtual at rbx

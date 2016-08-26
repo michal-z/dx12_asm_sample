@@ -1,6 +1,8 @@
 format PE64 GUI 4.0
 entry start
-
+;==============================================================================
+; Constants
+;------------------------------------------------------------------------------
 INFINITE = 0xffffffff
 IDI_APPLICATION = 32512
 IDC_ARROW = 32512
@@ -24,169 +26,204 @@ INVALID_FILE_SIZE = 0xffffffff
 FILE_ATTRIBUTE_NORMAL = 128
 FILE_FLAG_SEQUENTIAL_SCAN = 0x08000000
 EVENT_ALL_ACCESS = 0x1F0003
+;==============================================================================
+; Macros
+;------------------------------------------------------------------------------
+macro maxValue dest, [v] {
+  common
+    maxv = 0
+  forward
+    if v > maxv
+      maxv = v
+    end if
+  common
+  dest = maxv }
 
-macro struc_offsets_size s {
-  virtual at 0
-  s s
-  sizeof.#s = $
-  end virtual }
-
-struc POINT {
-  .x                    dd ?
-  .y                    dd ? }
-struc_offsets_size      POINT
-
-struc MSG {
-  .hwnd                 dq ?
-  .message              dd ?, ?
-  .wParam               dq ?
-  .lParam               dq ?
-  .time                 dd ?
-  .pt                   POINT
-                        dd ? }
-struc_offsets_size      MSG
-
-struc WNDCLASS {
-  .style                dd ?, ?
-  .lpfnWndProc          dq ?
-  .cbClsExtra           dd ?
-  .cbWndExtra           dd ?
-  .hInstance            dq ?
-  .hIcon                dq ?
-  .hCursor              dq ?
-  .hbrBackground        dq ?
-  .lpszMenuName         dq ?
-  .lpszClassName        dq ? }
-struc_offsets_size      WNDCLASS
-
-struc RECT {
-  .left                 dd ?
-  .top                  dd ?
-  .right                dd ?
-  .bottom               dd ? }
-struc_offsets_size      RECT
-
-struc GUID p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 {
-                        dd p0
-                        dw p1
-                        dw p2
-                        db p3
-                        db p4
-                        db p5
-                        db p6
-                        db p7
-                        db p8
-                        db p9
-                        db p10 }
-include 'd3d12.inc'
-;========================================================================
 macro emit [inst] {
   forward
             inst }
 
 macro iacaBegin {
-            mov         ebx, 111
-            db          0x64, 0x67, 0x90 }
+            mov ebx, 111
+            db  0x64, 0x67, 0x90 }
 
 macro iacaEnd {
-            mov         ebx, 222
-            db          0x64, 0x67, 0x90 }
+            mov ebx, 222
+            db  0x64, 0x67, 0x90 }
 
-macro debugBreak {
-            int3
-            nop }
-
+macro debugBreak { int3 }
 macro falign { align 32 }
+macro dalign value* { rb (value - 1) - (($-$$) + (value - 1)) mod value }
 
-macro dalign value*, decl* {
-  rb (value - 1) - (($-$$) + (value - 1)) mod value
-  decl }
+struc dw [v] {
+  common
+  dalign 2
+  . dw v }
 
+struc dd [v] {
+  common
+  dalign 4
+  . dd v }
+
+struc dq [v] {
+  common
+  dalign 8
+  . dq v }
 
 macro comcall target* {
-            mov         rax, [rcx]
-            call        [rax+target] }
+            mov  rax, [rcx]
+            call [rax+target] }
 
 macro icall target* {
-            call        [target] }
+            call [target] }
 
 macro malloc size* {
-            mov         rcx, [glob.process_heap]
-            xor         edx, edx
-            mov         r8d, size
-            icall       HeapAlloc }
+            mov   rcx, [glob.process_heap]
+            xor   edx, edx
+            mov   r8d, size
+            icall HeapAlloc }
 
 macro free ptr* {
   local ..end
-            mov         r8, ptr
-            test        r8, r8
-            jz          ..end
-            mov         rcx, [glob.process_heap]
-            xor         edx, edx
-            icall       HeapFree
+            mov   r8, ptr
+            test  r8, r8
+            jz    ..end
+            mov   rcx, [glob.process_heap]
+            xor   edx, edx
+            icall HeapFree
   ..end: }
 
 macro safeClose handle* {
   local .end
-            mov         rcx, handle
-            test        rcx, rcx
-            jz          .end
-            icall       CloseHandle
-            mov         handle, 0
+            mov   rcx, handle
+            test  rcx, rcx
+            jz    .end
+            icall CloseHandle
+            mov   handle, 0
   .end: }
 
 macro safeRelease iface* {
   local ..end
-            mov         rcx, iface
-            test        rcx, rcx
-            jz          ..end
-            mov         rax, [rcx]
-            call        [IUnknown.Release+rax]
-            mov         iface, 0
+            mov  rcx, iface
+            test rcx, rcx
+            jz   ..end
+            mov  rax, [rcx]
+            call [IUnknown.Release+rax]
+            mov  iface, 0
   ..end: }
 
 macro transBar ptr*, res*, sbefore*, safter* {
-            mov         [ptr+D3D12_RESOURCE_BARRIER.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
-            mov         [ptr+D3D12_RESOURCE_BARRIER.Transition.pResource], rax, res
-            mov         [ptr+D3D12_RESOURCE_BARRIER.Flags], 0 
-            mov         [ptr+D3D12_RESOURCE_BARRIER.Transition.StateBefore], sbefore
-            mov         [ptr+D3D12_RESOURCE_BARRIER.Transition.StateAfter], safter
-            mov         [ptr+D3D12_RESOURCE_BARRIER.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES }
+            mov [ptr+D3D12_RESOURCE_BARRIER.Type], D3D12_RESOURCE_BARRIER_TYPE_TRANSITION
+            mov [ptr+D3D12_RESOURCE_BARRIER.Transition.pResource], rax, res
+            mov [ptr+D3D12_RESOURCE_BARRIER.Flags], 0
+            mov [ptr+D3D12_RESOURCE_BARRIER.Transition.StateBefore], sbefore
+            mov [ptr+D3D12_RESOURCE_BARRIER.Transition.StateAfter], safter
+            mov [ptr+D3D12_RESOURCE_BARRIER.Transition.Subresource], D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES }
 
 macro mov op1*, op2*, op3 {
   if op3 eq
-            mov         op1, op2
+            mov op1, op2
   else
-            mov         op2, op3
-            mov         op1, op2
+            mov op2, op3
+            mov op1, op2
   end if }
 
 macro lea op1*, op2*, op3 {
   if op3 eq
-            lea         op1, op2
+            lea op1, op2
   else
-            lea         op2, op3
-            mov         op1, op2
+            lea op2, op3
+            mov op1, op2
   end if }
 
 macro zeroStack size* {
-            vpxor       ymm0, ymm0, ymm0
-            xor         eax, eax
-  @@:       vmovdqa     [rsp+rax], ymm0
-            add         eax, 32
-            cmp         eax, 32*(size/32)
-            jne         @b }
+            vpxor   ymm0, ymm0, ymm0
+            xor     eax, eax
+  @@:       vmovdqa [rsp+rax], ymm0
+            add     eax, 32
+            cmp     eax, 32*(size/32)
+            jne     @b }
 
 macro checkhr res*, err* {
-            test        res, res
-            js          err }
+            test res, res
+            js   err }
 
 macro vshufps d*, s0*, s1*, fp3*, fp2, fp1, fp0 {
   if fp2 eq
-            vshufps     d, s0, s1, fp3
+            vshufps d, s0, s1, fp3
   else
-            vshufps     d, s0, s1, (fp3 shl 6) or (fp2 shl 4) or (fp1 shl 2) or fp0
+            vshufps d, s0, s1, (fp3 shl 6) or (fp2 shl 4) or (fp1 shl 2) or fp0
   end if }
+
+macro strucOffsetsSize s* {
+  virtual at 0
+  s s
+  sizeof.#s = $
+  end virtual }
+;==============================================================================
+; Structures
+;------------------------------------------------------------------------------
+alignment.POINT = 4
+struc POINT {
+  dalign 4
+  .:
+  .x dd 0
+  .y dd 0
+  dalign 4 }
+strucOffsetsSize POINT
+
+struc MSG {
+  dalign 8
+  .:
+  .hwnd    dq 0
+  .message dd 0
+  .wParam  dq 0
+  .lParam  dq 0
+  .time    dd 0
+  .pt      POINT
+  dalign 8 }
+strucOffsetsSize MSG
+
+struc WNDCLASS {
+  dalign 8
+  .:
+  .style         dd 0
+  .lpfnWndProc   dq 0
+  .cbClsExtra    dd 0
+  .cbWndExtra    dd 0
+  .hInstance     dq 0
+  .hIcon         dq 0
+  .hCursor       dq 0
+  .hbrBackground dq 0
+  .lpszMenuName  dq 0
+  .lpszClassName dq 0
+  dalign 8 }
+strucOffsetsSize WNDCLASS
+
+struc RECT {
+  dalign 4
+  .:
+  .left   dd 0
+  .top    dd 0
+  .right  dd 0
+  .bottom dd 0
+  dalign 4 }
+strucOffsetsSize RECT
+
+struc GUID p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 {
+  dd p0
+  dw p1
+  dw p2
+  db p3
+  db p4
+  db p5
+  db p6
+  db p7
+  db p8
+  db p9
+  db p10 }
+;========================================================================
+include 'd3d12.inc'
 ;========================================================================
 selected_scene fix scene1
 macro sceneInit { call selected_scene#_init }
@@ -203,15 +240,19 @@ k_max_descriptors_count      equ 1000
 section '.data' data readable writeable
 
 struc mipmap_generator {
+  dalign 8
+  .:
   .pso                  dq 0
   .rootsig              dq 0
   .mip_textures         dq 4 dup 0
   .dheap_cpu_start      dq 0
-  .dheap_gpu_start      dq 0 }
+  .dheap_gpu_start      dq 0
+  dalign 8 }
+strucOffsetsSize mipmap_generator
 ;=============================================================================
 ; scene1 data
 ;-----------------------------------------------------------------------------
-align 8
+dalign 8
 scene1:
   .mesh_vb              dq 0
   .mesh_ib              dq 0
@@ -219,15 +260,13 @@ scene1:
   .pso                  dq 0
   .rootsig              dq 0
 
-  align 4
   .eye_half_fovy        dd 0.52359876 ; pi / 6
   .eye_nearz            dd 1.0
   .eye_farz             dd 100.0
 
-  align 4
   .clear_color          dd 0.0, 0.2, 0.4, 1.0
 
-  align 16
+  dalign 16
   .eye_position:        dd 1.2, 1.2, -1.2, 1.0
   .eye_focus:           dd 0.0, 0.0, 0.0, 1.0
   .eye_up:              dd 0.0, 1.0, 0.0, 0.0
@@ -236,29 +275,29 @@ scene1:
   .tri_v1:              dd 0.0, 0.7, 0.5, 0.0
   .tri_v2:              dd 0.7, -0.7, 1.0, 1.0
 
-  dalign 8, .mesh_vb_view D3D12_VERTEX_BUFFER_VIEW
-  dalign 8, .mesh_ib_view D3D12_INDEX_BUFFER_VIEW
+  .mesh_vb_view         D3D12_VERTEX_BUFFER_VIEW
+  .mesh_ib_view         D3D12_INDEX_BUFFER_VIEW
 ;=============================================================================
 ; global data
 ;-----------------------------------------------------------------------------
 struc frame_resources {
+  dalign 8
+  .:
   .constant_buffer      dq 0
   .constant_buffer_addr dq 0
   .constant_buffer_view dq 0
-
   .cmdalloc             dq 0
-
   .dheap                dq 0
   .dheap_cpu_start      dq 0
-  .dheap_gpu_start      dq 0 }
-struc_offsets_size      frame_resources
+  .dheap_gpu_start      dq 0
+  dalign 8 }
+strucOffsetsSize frame_resources
 
-align 8
+dalign 8
 glob:
   .upload_buffers       dq k_upload_buffers_count dup 0
   .upload_buffers_count dd 0, 0
 
-  align 8
   .factory_dxgi         dq 0
   .device               dq 0
   .cmdqueue             dq 0
@@ -276,30 +315,26 @@ glob:
   .frame_fence_event    dq 0
   .cpu_completed_fences dq 0
 
-  dalign 8, .viewport   D3D12_VIEWPORT
-  dalign 8, .scissor    D3D12_RECT
+  .viewport   D3D12_VIEWPORT
+  .scissor    D3D12_RECT
 
-  align 4
   .rtv_size             dd 0
   .cbv_srv_uav_size     dd 0
   .back_buffer_index    dd 0
   .frame_index          dd 0
 
-  align 8
   rept k_buffered_frames_count n:0 { .frame_res#n frame_resources }
 
-  align 8
   .win_handle           dq 0
   .win_width            dd 1280
   .win_height           dd 720
   .process_heap         dq 0
   .time                 dq 0
-  .time_delta           dd 0, 0
+  .time_delta           dd 0
 ;=============================================================================
 match = 1, DEBUG {
   output_debug_string rb 256 }
 
-align 1
 sz_position             db 'POSITION', 0
 sz_texcoord             db 'TEXCOORD', 0
 sz_vs_object            db 'data/shader/object_vs.cso', 0
@@ -307,7 +342,6 @@ sz_ps_object            db 'data/shader/object_ps.cso', 0
 sz_img_gradient         db 'data/image/ceiling_GRosinWoodDirty_256_d.tga', 0
 sz_cs_mipgen            db 'data/shader/mipgen_cs.cso', 0
 
-align 8
 get_time.perf_counter               dq 0
 get_time.perf_freq                  dq 0
 get_time.first_perf_counter         dq 0
@@ -316,14 +350,13 @@ update_frame_stats.prev_time        dq 0
 update_frame_stats.prev_update_time dq 0
 update_frame_stats.frame            dd 0, 0
 
-align 8
 k_f64_1000000_0         dq 1000000.0
 k_f64_1_0               dq 1.0
 
-align 1
 k_win_class_name        db 'eneida', 0
 k_win_text_fmt          db '[%d fps  %d us] eneida', 0
 
+align 8
 IID_IDXGISwapChain3                 GUID 0x94d99bdb,0xf1f8,0x4ab0,0xb2,0x36,0x7d,0xa0,0x17,0x0e,0xda,0xb1
 IID_IDXGIFactory4                   GUID 0x1bc6ea02,0xef36,0x464f,0xbf,0x0c,0x21,0xca,0x39,0xe5,0x16,0x8a
 IID_ID3D12Device                    GUID 0x189819f1,0x1db6,0x4b57,0xbe,0x54,0x18,0x21,0x33,0x9b,0x85,0xf7
@@ -405,7 +438,8 @@ update_frame_stats:
 
   .text rb 64
 
-  dalign 32, .k_stack_size = $-$$+24
+  dalign 32
+  .k_stack_size = $-$$+24
   end virtual
   ;---------------------------------------
             mov         rax, [.prev_time]
@@ -459,10 +493,11 @@ init_window:
   virtual at rsp
   rept 12 n:1 { .param#n dq ? }
 
-  dalign 8, .wc   WNDCLASS
-  dalign 8, .rect RECT
+  .wc   WNDCLASS
+  .rect RECT
 
-  dalign 32, .k_stack_size = $-$$+16
+  dalign 32
+  .k_stack_size = $-$$+16
   end virtual
   ;---------------------------------------
             zeroStack   .k_stack_size
@@ -574,9 +609,10 @@ start:
   virtual at rsp
   rept 5 n { .param#n dq ? }
 
-  dalign 8, .msg MSG
+  .msg MSG
 
-  dalign 32, .k_stack_size = $-$$
+  dalign 32
+  .k_stack_size = $-$$
   end virtual
   ;---------------------------------------
             call        init
@@ -642,6 +678,7 @@ dd 0, 0, 0, rva _dxgi,     rva _dxgi_table
 dd 0, 0, 0, rva _d3d12,    rva _d3d12_table
 dd 0, 0, 0, 0, 0
 
+dalign 8
 _kernel32_table:
   GetModuleHandle           dq rva _GetModuleHandle
   ExitProcess               dq rva _ExitProcess
@@ -671,6 +708,8 @@ _kernel32_table:
   RtlMoveMemory             dq rva _RtlMoveMemory
   RtlZeroMemory             dq rva _RtlZeroMemory
                             dq 0
+
+dalign 8
 _user32_table:
   wsprintf                  dq rva _wsprintf
   RegisterClass             dq rva _RegisterClass
@@ -686,9 +725,13 @@ _user32_table:
   PostQuitMessage           dq rva _PostQuitMessage
   MessageBox                dq rva _MessageBox
                             dq 0
+
+dalign 8
 _dxgi_table:
   CreateDXGIFactory1        dq rva _CreateDXGIFactory1
                             dq 0
+
+dalign 8
 _d3d12_table:
   D3D12CreateDevice         dq rva _D3D12CreateDevice
   D3D12GetDebugInterface    dq rva _D3D12GetDebugInterface

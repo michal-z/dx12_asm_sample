@@ -11,12 +11,13 @@ mipgen_init:
   virtual at rsp
   rept 8 n { .param#n dq ? }
 
-  dalign 8, .upload_heap_props D3D12_HEAP_PROPERTIES
-  dalign 8, .texture_desc      D3D12_RESOURCE_DESC
-  dalign 8, .uav_desc          D3D12_UNORDERED_ACCESS_VIEW_DESC
-  dalign 8, .pso_desc          D3D12_COMPUTE_PIPELINE_STATE_DESC
+  .upload_heap_props D3D12_HEAP_PROPERTIES
+  .texture_desc      D3D12_RESOURCE_DESC
+  .uav_desc          D3D12_UNORDERED_ACCESS_VIEW_DESC
+  .pso_desc          D3D12_COMPUTE_PIPELINE_STATE_DESC
 
-  dalign 32, .k_stack_size = $-$$+8
+  dalign 32
+  .k_stack_size = $-$$+8
   end virtual
 
   virtual at r12
@@ -128,15 +129,16 @@ mipgen_record_commands:
   .num_mips       dd ?                    ; number of mipmaps to generate in current iteration
   .src_mip        dd ?, ?
 
-  dalign 8, rept 5 n:0 { .barrier\#n D3D12_RESOURCE_BARRIER }
+  rept 5 n:0 { .barrier#n D3D12_RESOURCE_BARRIER }
 
-  dalign 8, .texture_desc D3D12_RESOURCE_DESC
-  dalign 8, .srv_desc     D3D12_SHADER_RESOURCE_VIEW_DESC
-  dalign 8, .copy_src     D3D12_TEXTURE_COPY_LOCATION
-  dalign 8, .copy_dst     D3D12_TEXTURE_COPY_LOCATION
-  dalign 8, .src_box      D3D12_BOX
+  .texture_desc D3D12_RESOURCE_DESC
+  .srv_desc     D3D12_SHADER_RESOURCE_VIEW_DESC
+  .copy_src     D3D12_TEXTURE_COPY_LOCATION
+  .copy_dst     D3D12_TEXTURE_COPY_LOCATION
+  .src_box      D3D12_BOX
 
-  dalign 32, .k_stack_size = $-$$+24
+  dalign 32
+  .k_stack_size = $-$$+24
   end virtual
 
   virtual at r12
